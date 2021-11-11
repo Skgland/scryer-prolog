@@ -1,64 +1,31 @@
-use crate::helper::{load_module_test, run_top_level_test_with_args};
+crate::declare_tests!(
+    "tests-pl/src_test/" =>
+    load_module syntax_error
+        => out "caught: error(syntax_error(incomplete_reduction),read_term/3:6)\n"
+);
 
-#[test]
-fn builtins() {
-    load_module_test("src/tests/builtins.pl", "");
-}
+crate::declare_tests!(
+    "src/tests/" =>
+    load_module builtins,
+    load_module call_with_inference_limit,
+    load_module facts,
+    load_module hello_world
+        => out "Hello World!\n",
+    load_module rules,
 
-#[test]
-fn call_with_inference_limit() {
-    load_module_test("src/tests/call_with_inference_limit.pl", "");
-}
+    #[ignore] // fails to halt
+    load_module predicates,
 
-#[test]
-fn facts() {
-    load_module_test("src/tests/facts.pl", "");
-}
+    #[ignore] // var ids sometimes differ
+    load_module setup_call_cleanup
+        => out "1+21+31+2>_13169+_131701+_121851+2>41+2>_131701+2>31+2>31+2>4ba",
 
-#[test]
-fn hello_world() {
-    load_module_test("src/tests/hello_world.pl", "Hello World!\n");
-}
-
-#[test]
-fn syntax_error() {
-    load_module_test(
-        "tests-pl/syntax_error.pl",
-        "caught: error(syntax_error(incomplete_reduction),read_term/3:6)\n",
-    );
-}
-
-#[test]
-#[ignore] // fails to halt
-fn predicates() {
-    load_module_test("src/tests/predicates.pl", "");
-}
-
-#[test]
-fn rules() {
-    load_module_test("src/tests/rules.pl", "");
-}
-
-#[test]
-#[ignore]
-fn setup_call_cleanup_load() {
-    load_module_test(
-        "src/tests/setup_call_cleanup.pl",
-        "1+21+31+2>_13165+_131661+_121811+2>41+2>_131661+2>31+2>31+2>4ba",
-    );
-}
-
-#[test]
-#[ignore]
-fn setup_call_cleanup_process() {
-    run_top_level_test_with_args(
-        &["src/tests/setup_call_cleanup.pl"],
-        "",
-        "1+21+31+2>_14108+_141091+_131241+2>41+2>_141091+2>31+2>31+2>4ba",
-    );
-}
-
-#[test]
-fn clpz_load() {
-    load_module_test("src/tests/clpz/test_clpz.pl", "");
-}
+    #[ignore] // var ids sometimes differ
+    toplevel setup_call_cleanup_process
+        => out "1+21+31+2>_14107+_141081+_131231+2>41+2>_141081+2>31+2>31+2>4ba"
+        => with &["src/tests/setup_call_cleanup.pl"]
+);
+crate::declare_tests!(
+    "src/tests/clpz/" =>
+    load_module test_clpz
+);

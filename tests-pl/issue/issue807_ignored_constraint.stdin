@@ -1,0 +1,1 @@
+use_module(library(freeze)), freeze(X,false), X \=a.

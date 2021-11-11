@@ -1,0 +1,4 @@
+X = 1.
+use_module(library(dif)).
+X = 1.
+dif(X,1).
