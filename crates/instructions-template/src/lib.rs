@@ -3236,8 +3236,8 @@ impl InstructionData {
 
         let v_string = variant.ident.to_string();
 
-        let v_ident = if v_string.starts_with("Call") {
-            format_ident!("{}", v_string["Call".len() ..])
+        let v_ident = if let Some(v_string_suffix) = v_string.strip_prefix("Call") {
+            format_ident!("{}", v_string_suffix)
         } else {
             variant.ident.clone()
         };
