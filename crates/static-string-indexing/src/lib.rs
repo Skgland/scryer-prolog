@@ -33,7 +33,7 @@ impl Parse for ReadHeapCellExprAndArms {
         arms.push(input.parse()?);
 
         while !input.is_empty() {
-            if let Ok(_) = input.parse::<Token![,]>() {}
+            let _ = input.parse::<Token![,]>();
             arms.push(input.parse()?);
         }
 
@@ -50,7 +50,7 @@ impl Parse for MacroFnArgs {
         }
 
         while !input.is_empty() {
-            if let Ok(_) = input.parse::<Token![,]>() {}
+            let _ = input.parse::<Token![,]>();
             args.push(input.parse()?);
         }
 
