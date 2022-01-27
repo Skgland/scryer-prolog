@@ -2733,7 +2733,7 @@ pub fn generate_instructions_rs() -> TokenStream {
                 return None;
             }
 
-            let variant_ident = variant.ident.clone();
+            let variant_ident = variant.ident;
 
             Some(quote! {
                 Instruction::#variant_ident(..) => true
