@@ -1,5 +1,5 @@
-use static_string_indexing::index_static_strings;
 use instructions_template::generate_instructions_rs;
+use static_string_indexing::index_static_strings;
 
 use std::env;
 use std::fs;
@@ -67,8 +67,10 @@ fn main() {
 
     Command::new("rustfmt")
         .arg(instructions_path.as_os_str())
-        .spawn().unwrap()
-        .wait().unwrap();
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 
     let static_atoms_path = Path::new(&out_dir).join("static_atoms.rs");
     let mut static_atoms_file = File::create(&static_atoms_path).unwrap();
@@ -81,8 +83,10 @@ fn main() {
 
     Command::new("rustfmt")
         .arg(static_atoms_path.as_os_str())
-        .spawn().unwrap()
-        .wait().unwrap();
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 
     println!("cargo:rerun-if-changed=src/");
 }
