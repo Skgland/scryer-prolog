@@ -2595,8 +2595,8 @@ pub fn generate_instructions_rs() -> TokenStream {
                 .map(|n| format_ident!("f_{}", n))
                 .collect();
 
-            if variant_string.starts_with("Call") {
-                let execute_ident = format_ident!("Execute{}", variant_string["Call".len() ..]);
+            if let Some(variant_string_suffix) = variant_string.strip_prefix("Call") {
+                let execute_ident = format_ident!("Execute{}", variant_string_suffix);
 
                 Some(if enum_arity == 0 {
                     quote! {
@@ -2609,9 +2609,8 @@ pub fn generate_instructions_rs() -> TokenStream {
                             Instruction::#execute_ident(#(#placeholder_ids),*)
                     }
                 })
-            } else if variant_string.starts_with("DefaultCall") {
-                let execute_ident =
-                    format_ident!("DefaultExecute{}", variant_string["DefaultCall".len() ..]);
+            } else if let Some(variant_string_suffix) = variant_string.strip_prefix("DefaultCall") {
+                let execute_ident = format_ident!("DefaultExecute{}", variant_string_suffix);
 
                 Some(if enum_arity == 0 {
                     quote! {
