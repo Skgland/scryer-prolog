@@ -3131,7 +3131,7 @@ enum Arity {
 
 impl From<&'static str> for Arity {
     fn from(arity: &'static str) -> Self {
-        usize::from_str_radix(&arity, 10)
+        usize::from_str_radix(arity, 10)
             .map(|n| Arity::Static(n))
             .unwrap_or_else(|_| Arity::Ident(arity))
     }
