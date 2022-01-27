@@ -2760,7 +2760,7 @@ pub fn generate_instructions_rs() -> TokenStream {
         .iter()
         .rev() // produce default, execute & default & execute cases first.
         .cloned()
-        .filter_map(|(name, arity, _, variant)| {
+        .map(|(name, arity, _, variant)| {
             let variant_ident = variant.ident.clone();
             let variant_string = variant.ident.to_string();
             let arity = match arity {
@@ -2768,7 +2768,7 @@ pub fn generate_instructions_rs() -> TokenStream {
                 _ => 1
             };
 
-            Some(if variant_string.starts_with("Execute") {
+            if variant_string.starts_with("Execute") {
                 quote! {
                     (#name, execute, $($args:expr),*) => {
                         Instruction::#variant_ident($($args),*)
@@ -2806,7 +2806,7 @@ pub fn generate_instructions_rs() -> TokenStream {
                         }
                     }
                 }
-            })
+            }
         })
         .collect();
 
