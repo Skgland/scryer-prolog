@@ -63,11 +63,11 @@ impl<'ast> Visit<'ast> for StaticStrVisitor {
         let Macro { path, .. } = m;
 
         if path.is_ident("atom") {
-            if let Some(Lit::Str(string)) = m.parse_body::<Lit>().ok() {
+            if let Ok(Lit::Str(string)) = m.parse_body::<Lit>() {
                 self.static_strs.insert(string.value());
             }
         } else if path.is_ident("read_heap_cell") {
-            if let Some(m) = m.parse_body::<ReadHeapCellExprAndArms>().ok() {
+            if let Ok(m) = m.parse_body::<ReadHeapCellExprAndArms>() {
                 self.visit_expr(&m.expr);
 
                 for e in m.arms {
@@ -75,7 +75,7 @@ impl<'ast> Visit<'ast> for StaticStrVisitor {
                 }
             }
         } else {
-            if let Some(m) = m.parse_body::<MacroFnArgs>().ok() {
+            if let Ok(m) = m.parse_body::<MacroFnArgs>() {
                 for e in m.args {
                     self.visit_expr(&e);
                 }
