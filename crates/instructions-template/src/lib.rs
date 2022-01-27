@@ -2777,18 +2777,16 @@ pub fn generate_instructions_rs() -> TokenStream {
                         Instruction::#variant_ident($($args),*)
                     }
                 }
-            } else {
-                if arity == 0 {
-                    quote! {
-                        (#name) => {
-                            Instruction::#variant_ident
-                        }
+            } else if arity == 0 {
+                quote! {
+                    (#name) => {
+                        Instruction::#variant_ident
                     }
-                } else {
-                    quote! {
-                        (#name, $($args:expr),*) => {
-                            Instruction::#variant_ident($($args),*)
-                        }
+                }
+            } else {
+                quote! {
+                    (#name, $($args:expr),*) => {
+                        Instruction::#variant_ident($($args),*)
                     }
                 }
             }
