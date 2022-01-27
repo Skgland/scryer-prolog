@@ -133,10 +133,12 @@ fn compound_goal() {
 // issue #815
 #[test]
 fn no_stutter() {
-    run_top_level_test_no_args("write(a), write(b), false.\n\
+    run_top_level_test_no_args(
+        "write(a), write(b), false.\n\
                                 halt.\n\
                                 ",
-                               "abfalse.\n")
+        "abfalse.\n",
+    )
 }
 
 /*
