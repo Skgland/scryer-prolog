@@ -1,8 +1,8 @@
 use num_bigint::{BigInt, ParseBigIntError};
 use num_integer::Integer as _;
 use num_rational::BigRational;
-use num_traits::{FromPrimitive, Num, Signed, ToPrimitive};
 use num_traits::identities::One;
+use num_traits::{FromPrimitive, Num, Signed, ToPrimitive};
 
 use std::cmp::Ordering;
 use std::fmt::{self, Display, Formatter};
@@ -121,7 +121,14 @@ impl Integer {
 
     #[inline]
     pub fn count_ones(&self) -> Option<u32> {
-        Some(self.0.to_u32_digits().1.iter().map(|&d| d.count_ones()).sum())
+        Some(
+            self.0
+                .to_u32_digits()
+                .1
+                .iter()
+                .map(|&d| d.count_ones())
+                .sum(),
+        )
     }
 }
 
@@ -831,14 +838,16 @@ pub mod rand {
     use super::Integer;
     use std::marker::PhantomData;
 
-    pub struct RandState<'a>{
+    pub struct RandState<'a> {
         _marker: PhantomData<&'a ()>,
     }
 
     impl<'a> RandState<'a> {
         pub fn new() -> Self {
             unsafe { libc::srand(libc::time(std::ptr::null_mut()) as _) };
-            RandState { _marker: PhantomData }
+            RandState {
+                _marker: PhantomData,
+            }
         }
 
         pub fn borrow_mut(&self) -> &Self {
@@ -851,15 +860,15 @@ pub mod rand {
         }
 
         pub fn seed(&mut self, seed: &Integer) {
-            unsafe { libc::srand(seed.to_f64() as _)}
+            unsafe { libc::srand(seed.to_f64() as _) }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::ops::NegAssign;
+    use super::*;
 
     #[test]
     fn bits() {
