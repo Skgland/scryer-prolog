@@ -729,7 +729,7 @@ enum InstructionTemplate {
 }
 
 fn derive_input(ty: &Type) -> Option<DeriveInput> {
-    let clause_type: Type = parse_quote!{ ClauseType };
+    let clause_type: Type = parse_quote! { ClauseType };
     let built_in_clause_type: Type = parse_quote! { BuiltInClauseType };
     let inlined_clause_type: Type = parse_quote! { InlinedClauseType };
     let system_clause_type: Type = parse_quote! { SystemClauseType };
@@ -775,7 +775,8 @@ fn add_discriminant_data<DiscriminantT>(
     prefix: &'static str,
     variant_data: &mut Vec<(&'static str, Arity, Variant)>,
 ) -> (&'static str, Arity)
-    where DiscriminantT: FromStr + strum::EnumProperty + std::fmt::Debug
+where
+    DiscriminantT: FromStr + strum::EnumProperty + std::fmt::Debug,
 {
     let name = prop_from_ident::<DiscriminantT>(&variant.ident, "Name");
     let arity = Arity::from(prop_from_ident::<DiscriminantT>(&variant.ident, "Arity"));
@@ -2127,7 +2128,8 @@ pub fn generate_instructions_rs() -> TokenStream {
 
     instr_data.generate_instruction_enum_loop(input);
 
-    let instr_variants: Vec<_> = instr_data.instr_variants
+    let instr_variants: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .map(|(_, _, _, variant)| variant)
@@ -2160,7 +2162,8 @@ pub fn generate_instructions_rs() -> TokenStream {
     for (name, arity, variant) in instr_data.compare_number_variants {
         let ident = variant.ident.clone();
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 let ty = field.ty;
@@ -2199,17 +2202,15 @@ pub fn generate_instructions_rs() -> TokenStream {
         let ident = variant.ident;
         let instr_ident = format_ident!("Call{}", ident);
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
-        clause_type_to_instr_arms.push(
-            quote! {
-                ClauseType::Inlined(
-                    InlinedClauseType::CompareNumber(CompareNumber::#ident(#(#placeholder_ids),*))
-                ) => Instruction::#instr_ident(#(#placeholder_ids),*, 0)
-            }
-        );
+        clause_type_to_instr_arms.push(quote! {
+            ClauseType::Inlined(
+                InlinedClauseType::CompareNumber(CompareNumber::#ident(#(#placeholder_ids),*))
+            ) => Instruction::#instr_ident(#(#placeholder_ids),*, 0)
+        });
     }
 
     for (name, arity, variant) in instr_data.compare_term_variants {
@@ -2221,30 +2222,27 @@ pub fn generate_instructions_rs() -> TokenStream {
             )
         });
 
-        clause_type_name_arms.push(
-            quote! {
-                ClauseType::BuiltIn(
-                    BuiltInClauseType::CompareTerm(CompareTerm::#ident)
-                ) => atom!(#name)
-            }
-        );
+        clause_type_name_arms.push(quote! {
+            ClauseType::BuiltIn(
+                BuiltInClauseType::CompareTerm(CompareTerm::#ident)
+            ) => atom!(#name)
+        });
 
         let ident = variant.ident;
         let instr_ident = format_ident!("Call{}", ident);
 
-        clause_type_to_instr_arms.push(
-            quote! {
-                ClauseType::BuiltIn(
-                    BuiltInClauseType::CompareTerm(CompareTerm::#ident)
-                ) => Instruction::#instr_ident(0)
-            }
-        );
+        clause_type_to_instr_arms.push(quote! {
+            ClauseType::BuiltIn(
+                BuiltInClauseType::CompareTerm(CompareTerm::#ident)
+            ) => Instruction::#instr_ident(0)
+        });
     }
 
     for (name, arity, variant) in instr_data.builtin_type_variants {
         let ident = variant.ident.clone();
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 let ty = field.ty;
@@ -2283,7 +2281,7 @@ pub fn generate_instructions_rs() -> TokenStream {
         let ident = variant.ident;
         let instr_ident = format_ident!("Call{}", ident);
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
@@ -2305,7 +2303,8 @@ pub fn generate_instructions_rs() -> TokenStream {
     for (name, arity, variant) in instr_data.inlined_type_variants {
         let ident = variant.ident.clone();
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 if field.ty.type_id() == TypeId::of::<usize>() {
@@ -2348,23 +2347,22 @@ pub fn generate_instructions_rs() -> TokenStream {
         let ident = variant.ident;
         let instr_ident = format_ident!("Call{}", ident);
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
-        clause_type_to_instr_arms.push(
-            quote! {
-                ClauseType::Inlined(
-                    InlinedClauseType::#ident(#(#placeholder_ids),*)
-                ) => Instruction::#instr_ident(#(#placeholder_ids),*,0)
-            }
-        );
+        clause_type_to_instr_arms.push(quote! {
+            ClauseType::Inlined(
+                InlinedClauseType::#ident(#(#placeholder_ids),*)
+            ) => Instruction::#instr_ident(#(#placeholder_ids),*,0)
+        });
     }
 
     for (name, arity, variant) in instr_data.system_clause_type_variants {
         let ident = variant.ident.clone();
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 if field.ty == parse_quote! { usize } {
@@ -2419,7 +2417,7 @@ pub fn generate_instructions_rs() -> TokenStream {
             ident.clone()
         };
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
@@ -2441,7 +2439,8 @@ pub fn generate_instructions_rs() -> TokenStream {
     for (name, arity, variant) in instr_data.repl_code_ptr_variants {
         let ident = variant.ident.clone();
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 if field.ty.type_id() == TypeId::of::<usize>() {
@@ -2484,7 +2483,7 @@ pub fn generate_instructions_rs() -> TokenStream {
         let ident = variant.ident;
         let instr_ident = format_ident!("Call{}", ident);
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
@@ -2522,7 +2521,8 @@ pub fn generate_instructions_rs() -> TokenStream {
             continue;
         }
 
-        let variant_fields: Vec<_> = variant.fields
+        let variant_fields: Vec<_> = variant
+            .fields
             .into_iter()
             .map(|field| {
                 if field.ty == parse_quote! { usize } {
@@ -2556,7 +2556,7 @@ pub fn generate_instructions_rs() -> TokenStream {
 
         let ident = variant.ident;
 
-        let placeholder_ids: Vec<_> = (0 .. variant_fields.len())
+        let placeholder_ids: Vec<_> = (0..variant_fields.len())
             .map(|n| format_ident!("f_{}", n))
             .collect();
 
@@ -2572,7 +2572,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         });
     }
 
-    let to_execute_arms: Vec<_> = instr_data.instr_variants
+    let to_execute_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .filter_map(|(_, _, _, variant)| {
@@ -2585,9 +2586,8 @@ pub fn generate_instructions_rs() -> TokenStream {
                 0
             };
 
-            let placeholder_ids: Vec<_> = (0 .. enum_arity)
-                .map(|n| format_ident!("f_{}", n))
-                .collect();
+            let placeholder_ids: Vec<_> =
+                (0..enum_arity).map(|n| format_ident!("f_{}", n)).collect();
 
             if let Some(variant_string_suffix) = variant_string.strip_prefix("Call") {
                 let execute_ident = format_ident!("Execute{}", variant_string_suffix);
@@ -2628,7 +2628,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let is_execute_arms: Vec<_> = instr_data.instr_variants
+    let is_execute_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .filter_map(|(_, _, _, variant)| {
@@ -2662,7 +2663,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let to_default_arms: Vec<_> = instr_data.instr_variants
+    let to_default_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .filter_map(|(_, _, countable_inference, variant)| {
@@ -2679,9 +2681,8 @@ pub fn generate_instructions_rs() -> TokenStream {
                     unreachable!()
                 };
 
-                let placeholder_ids: Vec<_> = (0 .. enum_arity)
-                    .map(|n| format_ident!("f_{}", n))
-                    .collect();
+                let placeholder_ids: Vec<_> =
+                    (0..enum_arity).map(|n| format_ident!("f_{}", n)).collect();
 
                 Some(quote! {
                     Instruction::#variant_ident(#(#placeholder_ids),*) =>
@@ -2693,7 +2694,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let perm_vars_mut_arms: Vec<_> = instr_data.instr_variants
+    let perm_vars_mut_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .filter_map(|(_, _, _, variant)| {
@@ -2708,9 +2710,7 @@ pub fn generate_instructions_rs() -> TokenStream {
                 0
             };
 
-            let placeholder_ids: Vec<_> = (1 .. enum_arity)
-                .map(|_| format_ident!("_"))
-                .collect();
+            let placeholder_ids: Vec<_> = (1..enum_arity).map(|_| format_ident!("_")).collect();
 
             Some(if enum_arity == 1 {
                 quote! {
@@ -2725,7 +2725,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let control_flow_arms: Vec<_> = instr_data.instr_variants
+    let control_flow_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .cloned()
         .filter_map(|(_, _, _, variant)| {
@@ -2741,7 +2742,8 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let instr_macro_arms: Vec<_> = instr_data.instr_variants
+    let instr_macro_arms: Vec<_> = instr_data
+        .instr_variants
         .iter()
         .rev() // produce default, execute & default & execute cases first.
         .cloned()
@@ -2750,7 +2752,7 @@ pub fn generate_instructions_rs() -> TokenStream {
             let variant_string = variant.ident.to_string();
             let arity = match arity {
                 Arity::Static(arity) => arity,
-                _ => 1
+                _ => 1,
             };
 
             if variant_string.starts_with("Execute") {
@@ -2793,9 +2795,10 @@ pub fn generate_instructions_rs() -> TokenStream {
         })
         .collect();
 
-    let name_and_arity_arms: Vec<_> = instr_data.instr_variants
+    let name_and_arity_arms: Vec<_> = instr_data
+        .instr_variants
         .into_iter()
-        .map(|(name,arity,_,variant)| {
+        .map(|(name, arity, _, variant)| {
             let ident = &variant.ident;
 
             let enum_arity = if let Fields::Unnamed(fields) = &variant.fields {
@@ -3032,8 +3035,10 @@ pub fn generate_instructions_rs() -> TokenStream {
 fn is_callable(id: &Ident) -> bool {
     let id = id.to_string();
 
-    id.starts_with("Call") || id.starts_with("Execute") || id.starts_with("DefaultCall") ||
-        id.starts_with("DefaultExecute")
+    id.starts_with("Call")
+        || id.starts_with("Execute")
+        || id.starts_with("DefaultCall")
+        || id.starts_with("DefaultExecute")
 }
 
 fn is_non_default_callable(id: &Ident) -> bool {
@@ -3073,7 +3078,7 @@ fn create_instr_variant(id: Ident, mut variant: Variant) -> Variant {
                         let mut fields_seq = Punctuated::new();
                         fields_seq.push(field);
                         fields_seq
-                    }
+                    },
                 });
             }
             _ => {
@@ -3089,7 +3094,8 @@ fn create_instr_variant(id: Ident, mut variant: Variant) -> Variant {
 }
 
 fn prop_from_ident<DiscriminantT>(id: &Ident, key: &'static str) -> &'static str
-   where DiscriminantT: FromStr + strum::EnumProperty + std::fmt::Debug
+where
+    DiscriminantT: FromStr + strum::EnumProperty + std::fmt::Debug,
 {
     let disc = match DiscriminantT::from_str(id.to_string().as_str()) {
         Ok(disc) => disc,
@@ -3109,7 +3115,7 @@ fn prop_from_ident<DiscriminantT>(id: &Ident, key: &'static str) -> &'static str
 #[derive(Clone, Copy)]
 enum Arity {
     Static(usize),
-    Ident(&'static str)
+    Ident(&'static str),
 }
 
 impl From<&'static str> for Arity {
@@ -3201,9 +3207,13 @@ impl InstructionData {
 
             (name, arity, CountableInference::NotCounted)
         } else if id == "InstructionTemplate" {
-            ( prop_from_ident::<InstructionTemplateDiscriminants>(&variant.ident, "Name"),
-              Arity::from(prop_from_ident::<InstructionTemplateDiscriminants>(&variant.ident, "Arity")),
-              CountableInference::NotCounted
+            (
+                prop_from_ident::<InstructionTemplateDiscriminants>(&variant.ident, "Name"),
+                Arity::from(prop_from_ident::<InstructionTemplateDiscriminants>(
+                    &variant.ident,
+                    "Arity",
+                )),
+                CountableInference::NotCounted,
             )
         } else if id == "ClauseType" {
             let (name, arity) = add_discriminant_data::<ClauseTypeDiscriminants>(
@@ -3225,14 +3235,11 @@ impl InstructionData {
             variant.ident.clone()
         };
 
-        let generated_variant = create_instr_variant(
-            format_ident!("{}{}", prefix, v_ident),
-            variant.clone(),
-        );
+        let generated_variant =
+            create_instr_variant(format_ident!("{}{}", prefix, v_ident), variant.clone());
 
-        self.instr_variants.push(
-            (name, arity, countable_inference, generated_variant)
-        );
+        self.instr_variants
+            .push((name, arity, countable_inference, generated_variant));
     }
 
     fn generate_instruction_enum_loop(&mut self, input: syn::DeriveInput) {
@@ -3254,10 +3261,10 @@ impl InstructionData {
                 self.label_variant(&input.ident, "Call", variant.clone());
                 self.label_variant(&input.ident, "Execute", variant.clone());
 
-                if input.ident == "BuiltInClauseType" ||
-                    input.ident == "CompareNumber" ||
-                    input.ident == "CompareTerm" ||
-                    input.ident == "ClauseType"
+                if input.ident == "BuiltInClauseType"
+                    || input.ident == "CompareNumber"
+                    || input.ident == "CompareTerm"
+                    || input.ident == "ClauseType"
                 {
                     self.label_variant(&input.ident, "DefaultCall", variant.clone());
                     self.label_variant(&input.ident, "DefaultExecute", variant);
