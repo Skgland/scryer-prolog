@@ -2377,7 +2377,7 @@ pub fn generate_instructions_rs() -> TokenStream {
             .collect();
 
         clause_type_from_name_and_arity_arms.push(if !variant_fields.is_empty() {
-            if ident.to_string() == "SetCutPoint" || ident.to_string() == "SetCutPointByDefault" {
+            if ident == "SetCutPoint" || ident == "SetCutPointByDefault" {
                 quote! {
                     (atom!(#name), #arity) => ClauseType::System(
                         SystemClauseType::#ident(temp_v!(1))
