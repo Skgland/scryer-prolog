@@ -2377,13 +2377,7 @@ pub fn generate_instructions_rs() -> TokenStream {
             .collect();
 
         clause_type_from_name_and_arity_arms.push(if !variant_fields.is_empty() {
-            if ident.to_string() == "SetCutPoint" {
-                quote! {
-                    (atom!(#name), #arity) => ClauseType::System(
-                        SystemClauseType::#ident(temp_v!(1))
-                    )
-                }
-            } else if ident.to_string() == "SetCutPointByDefault" {
+            if ident.to_string() == "SetCutPoint" || ident.to_string() == "SetCutPointByDefault" {
                 quote! {
                     (atom!(#name), #arity) => ClauseType::System(
                         SystemClauseType::#ident(temp_v!(1))
@@ -2647,17 +2641,8 @@ pub fn generate_instructions_rs() -> TokenStream {
                 0
             };
 
-            if variant_string.starts_with("Execute") {
-                Some(if enum_arity == 0 {
-                    quote! {
-                        Instruction::#variant_ident => true
-                    }
-                } else {
-                    quote! {
-                        Instruction::#variant_ident(..) => true
-                    }
-                })
-            } else if variant_string.starts_with("DefaultExecute") {
+            if variant_string.starts_with("Execute") || variant_string.starts_with("DefaultExecute")
+            {
                 Some(if enum_arity == 0 {
                     quote! {
                         Instruction::#variant_ident => true
