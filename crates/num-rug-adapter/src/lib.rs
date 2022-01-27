@@ -847,7 +847,7 @@ pub mod rand {
 
         pub fn bits(&mut self, bits: u32) -> u32 {
             assert!(bits <= 32);
-            (unsafe { libc::rand() } as u32) & (u32::max_value() >> (32 - bits))
+            (unsafe { libc::rand() } as u32) & (u32::MAX >> (32 - bits))
         }
 
         pub fn seed(&mut self, seed: &Integer) {
