@@ -74,11 +74,9 @@ impl<'ast> Visit<'ast> for StaticStrVisitor {
                     self.visit_arm(&e);
                 }
             }
-        } else {
-            if let Ok(m) = m.parse_body::<MacroFnArgs>() {
-                for e in m.args {
-                    self.visit_expr(&e);
-                }
+        } else if let Ok(m) = m.parse_body::<MacroFnArgs>() {
+            for e in m.args {
+                self.visit_expr(&e);
             }
         }
     }
