@@ -11,6 +11,7 @@ use std::ops::*;
 use std::str::FromStr;
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[repr(transparent)] // to ensure type layout for transmute in Rational::denom and Rational::numer
 pub struct Integer(BigInt);
 
 impl Integer {
@@ -599,12 +600,14 @@ impl Rational {
 
     #[inline]
     pub fn numer(&self) -> &Integer {
-        unsafe { ::std::mem::transmute(self.0.numer()) }
+        // Safety: Integer is a repr(transparent) newtype of BigInt
+        unsafe { ::std::mem::transmute::<&BigInt, &Integer>(self.0.numer()) }
     }
 
     #[inline]
     pub fn denom(&self) -> &Integer {
-        unsafe { ::std::mem::transmute(self.0.denom()) }
+        // Safety: Integer is a repr(transparent) newtype of BigInt
+        unsafe { ::std::mem::transmute::<&BigInt, &Integer>(self.0.denom()) }
     }
 
     #[inline]
