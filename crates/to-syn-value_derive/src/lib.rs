@@ -1,5 +1,5 @@
-use syn::*;
 use quote::*;
+use syn::*;
 
 #[proc_macro_derive(ToDeriveInput)]
 pub fn derive_to_derive_input(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -16,5 +16,6 @@ pub fn derive_to_derive_input(input: proc_macro::TokenStream) -> proc_macro::Tok
                 }
             }
         }
-    }.into()
+    }
+    .into()
 }
