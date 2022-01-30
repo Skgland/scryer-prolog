@@ -6,7 +6,7 @@ use crate::types::HeapCellValueTag;
 use std::cell::Cell;
 use std::fmt;
 use std::hash::Hash;
-use std::io::{Error as IOError};
+use std::io::Error as IOError;
 use std::ops::Neg;
 use std::rc::Rc;
 use std::vec::Vec;
@@ -247,7 +247,8 @@ impl GenContext {
 pub struct OpDesc {
     prec: B11,
     spec: B8,
-    #[allow(unused)] padding: B13,
+    #[allow(unused)]
+    padding: B13,
 }
 
 impl OpDesc {
@@ -393,7 +394,9 @@ impl ParserError {
             ParserError::UnexpectedChar(..) => atom!("unexpected_char"),
             ParserError::UnexpectedEOF => atom!("unexpected_end_of_file"),
             ParserError::IncompleteReduction(..) => atom!("incomplete_reduction"),
-            ParserError::InvalidSingleQuotedCharacter(..) => atom!("invalid_single_quoted_character"),
+            ParserError::InvalidSingleQuotedCharacter(..) => {
+                atom!("invalid_single_quoted_character")
+            }
             ParserError::IO(_) => atom!("input_output_error"),
             ParserError::LexicalError(_) => atom!("lexical_error"), // TODO: ?
             ParserError::MissingQuote(..) => atom!("missing_quote"),
@@ -467,8 +470,10 @@ pub enum Fixity {
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Fixnum {
     num: B57,
-    #[allow(unused)] m: bool,
-    #[allow(unused)] tag: B6,
+    #[allow(unused)]
+    m: bool,
+    #[allow(unused)]
+    tag: B6,
 }
 
 impl Fixnum {
@@ -490,7 +495,8 @@ impl Fixnum {
             Ok(Fixnum::new()
                 .with_m(false)
                 .with_tag(HeapCellValueTag::Fixnum as u8)
-                .with_num(u64::from_ne_bytes(num.to_ne_bytes()) & ((1 << 57) - 1))) //num as u64 & ((1 << 57) - 1)))
+                .with_num(u64::from_ne_bytes(num.to_ne_bytes()) & ((1 << 57) - 1)))
+        //num as u64 & ((1 << 57) - 1)))
         } else {
             Err(OutOfBounds {})
         }

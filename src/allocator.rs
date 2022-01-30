@@ -15,13 +15,8 @@ pub(crate) trait Allocator<'a> {
     fn mark_anon_var<Target>(&mut self, _: Level, _: GenContext, _: &mut Code)
     where
         Target: crate::targets::CompilationTarget<'a>;
-    fn mark_non_var<Target>(
-        &mut self,
-        _: Level,
-        _: GenContext,
-        _: &'a Cell<RegType>,
-        _: &mut Code,
-    ) where
+    fn mark_non_var<Target>(&mut self, _: Level, _: GenContext, _: &'a Cell<RegType>, _: &mut Code)
+    where
         Target: crate::targets::CompilationTarget<'a>;
     fn mark_reserved_var<Target>(
         &mut self,

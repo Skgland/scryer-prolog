@@ -291,7 +291,6 @@ pub(crate) fn fixity(spec: u32) -> Fixity {
     }
 }
 
-
 impl OpDecl {
     #[inline]
     pub(crate) fn new(op_desc: OpDesc, name: Atom) -> Self {
@@ -369,12 +368,8 @@ impl AtomOrString {
     #[inline]
     pub fn to_string(self) -> String {
         match self {
-            AtomOrString::Atom(atom) => {
-                atom.as_str().to_owned()
-            }
-            AtomOrString::String(string) => {
-                string
-            }
+            AtomOrString::Atom(atom) => atom.as_str().to_owned(),
+            AtomOrString::String(string) => string,
         }
     }
 }
@@ -430,9 +425,7 @@ pub(crate) fn fetch_op_spec(name: Atom, arity: usize, op_dir: &OpDir) -> Option<
                 }
             })
         }
-        0 => {
-            fetch_atom_op_spec(name, None, op_dir)
-        }
+        0 => fetch_atom_op_spec(name, None, op_dir),
         _ => None,
     }
 }
@@ -464,10 +457,7 @@ pub struct Module {
 
 // Module's and related types are defined in forms.
 impl Module {
-    pub(crate) fn new(
-        module_decl: ModuleDecl,
-        listing_src: ListingSource,
-    ) -> Self {
+    pub(crate) fn new(module_decl: ModuleDecl, listing_src: ListingSource) -> Self {
         Module {
             module_decl,
             code_dir: CodeDir::with_hasher(FxBuildHasher::default()),
@@ -489,7 +479,7 @@ impl Module {
             meta_predicates: MetaPredicateDir::with_hasher(FxBuildHasher::default()),
             extensible_predicates: ExtensiblePredicates::with_hasher(FxBuildHasher::default()),
             local_extensible_predicates: LocalExtensiblePredicates::with_hasher(
-                FxBuildHasher::default()
+                FxBuildHasher::default(),
             ),
             listing_src: ListingSource::DynamicallyGenerated,
         }

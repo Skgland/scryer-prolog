@@ -94,14 +94,14 @@ impl<'a, R: CharRead> Lexer<'a, R> {
     pub fn lookahead_char(&mut self) -> Result<char, ParserError> {
         match self.reader.peek_char() {
             Some(Ok(c)) => Ok(c),
-            _ => Err(ParserError::UnexpectedEOF)
+            _ => Err(ParserError::UnexpectedEOF),
         }
     }
 
     pub fn read_char(&mut self) -> Result<char, ParserError> {
         match self.reader.read_char() {
             Some(Ok(c)) => Ok(c),
-            _ => Err(ParserError::UnexpectedEOF)
+            _ => Err(ParserError::UnexpectedEOF),
         }
     }
 
@@ -472,9 +472,12 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                 .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
                 .or_else(|_| {
                     Integer::from_str_radix(&token, 16)
-                        .map(|n| Token::Literal(Literal::Integer(
-                            arena_alloc!(n, &mut self.machine_st.arena)
-                        )))
+                        .map(|n| {
+                            Token::Literal(Literal::Integer(arena_alloc!(
+                                n,
+                                &mut self.machine_st.arena
+                            )))
+                        })
                         .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                 })
         } else {
@@ -504,9 +507,12 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                 .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
                 .or_else(|_| {
                     Integer::from_str_radix(&token, 8)
-                        .map(|n| Token::Literal(Literal::Integer(
-                            arena_alloc!(n, &mut self.machine_st.arena)
-                        )))
+                        .map(|n| {
+                            Token::Literal(Literal::Integer(arena_alloc!(
+                                n,
+                                &mut self.machine_st.arena
+                            )))
+                        })
                         .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                 })
         } else {
@@ -536,9 +542,12 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                 .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
                 .or_else(|_| {
                     Integer::from_str_radix(&token, 2)
-                        .map(|n| Token::Literal(Literal::Integer(
-                            arena_alloc!(n, &mut self.machine_st.arena)
-                        )))
+                        .map(|n| {
+                            Token::Literal(Literal::Integer(arena_alloc!(
+                                n,
+                                &mut self.machine_st.arena
+                            )))
+                        })
                         .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                 })
         } else {
@@ -688,7 +697,10 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                         token
                             .parse::<Integer>()
                             .map(|n| {
-                                Token::Literal(Literal::Integer(arena_alloc!(n, &mut self.machine_st.arena)))
+                                Token::Literal(Literal::Integer(arena_alloc!(
+                                    n,
+                                    &mut self.machine_st.arena
+                                )))
                             })
                             .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                     })
@@ -776,7 +788,10 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                         token
                             .parse::<Integer>()
                             .map(|n| {
-                                Token::Literal(Literal::Integer(arena_alloc!(n, &mut self.machine_st.arena)))
+                                Token::Literal(Literal::Integer(arena_alloc!(
+                                    n,
+                                    &mut self.machine_st.arena
+                                )))
                             })
                             .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                     })
@@ -787,7 +802,9 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                     self.hexadecimal_constant(c).or_else(|e| {
                         if let ParserError::ParseBigInt(..) = e {
                             i64::from_str_radix(&token, 10)
-                                .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
+                                .map(|n| {
+                                    Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena))
+                                })
                                 .or_else(|_| {
                                     token
                                         .parse::<Integer>()
@@ -809,7 +826,9 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                     self.octal_constant(c).or_else(|e| {
                         if let ParserError::ParseBigInt(..) = e {
                             i64::from_str_radix(&token, 10)
-                                .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
+                                .map(|n| {
+                                    Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena))
+                                })
                                 .or_else(|_| {
                                     token
                                         .parse::<Integer>()
@@ -831,7 +850,9 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                     self.binary_constant(c).or_else(|e| {
                         if let ParserError::ParseBigInt(..) = e {
                             i64::from_str_radix(&token, 10)
-                                .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
+                                .map(|n| {
+                                    Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena))
+                                })
                                 .or_else(|_| {
                                     token
                                         .parse::<Integer>()
@@ -873,7 +894,9 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                             self.return_char(c);
 
                             i64::from_str_radix(&token, 10)
-                                .map(|n| Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena)))
+                                .map(|n| {
+                                    Token::Literal(fixnum!(Literal, n, &mut self.machine_st.arena))
+                                })
                                 .or_else(|_| {
                                     token
                                         .parse::<Integer>()
@@ -910,7 +933,10 @@ impl<'a, R: CharRead> Lexer<'a, R> {
                         token
                             .parse::<Integer>()
                             .map(|n| {
-                                Token::Literal(Literal::Integer(arena_alloc!(n, &mut self.machine_st.arena)))
+                                Token::Literal(Literal::Integer(arena_alloc!(
+                                    n,
+                                    &mut self.machine_st.arena
+                                )))
                             })
                             .map_err(|_| ParserError::ParseBigInt(self.line_num, self.col_num))
                     })

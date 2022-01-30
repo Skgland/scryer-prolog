@@ -65,10 +65,7 @@ fn add_op_decl_as_module_export(
 
     match op_decl.insert_into_op_dir(wam_op_dir) {
         Some(op_desc) => {
-            retraction_info.push_record(RetractionRecord::ReplacedUserOp(
-                *op_decl,
-                op_desc,
-            ));
+            retraction_info.push_record(RetractionRecord::ReplacedUserOp(*op_decl, op_desc));
 
             module_op_exports.push((*op_decl, Some(op_desc)));
         }
@@ -90,10 +87,7 @@ pub(super) fn add_op_decl(
     match op_decl.insert_into_op_dir(op_dir) {
         Some(op_desc) => match &compilation_target {
             CompilationTarget::User => {
-                retraction_info.push_record(RetractionRecord::ReplacedUserOp(
-                    *op_decl,
-                    op_desc,
-                ));
+                retraction_info.push_record(RetractionRecord::ReplacedUserOp(*op_decl, op_desc));
             }
             CompilationTarget::Module(ref module_name) => {
                 retraction_info.push_record(RetractionRecord::ReplacedModuleOp(
@@ -108,10 +102,8 @@ pub(super) fn add_op_decl(
                 retraction_info.push_record(RetractionRecord::AddedUserOp(*op_decl));
             }
             CompilationTarget::Module(ref module_name) => {
-                retraction_info.push_record(RetractionRecord::AddedModuleOp(
-                    *module_name,
-                    *op_decl,
-                ));
+                retraction_info
+                    .push_record(RetractionRecord::AddedModuleOp(*module_name, *op_decl));
             }
         },
     }
@@ -369,10 +361,8 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
         mut clause_target_poses: Vec<Option<usize>>,
         is_dynamic: bool,
     ) {
-        let old_compilation_target = mem::replace(
-            &mut self.payload.compilation_target,
-            compilation_target,
-        );
+        let old_compilation_target =
+            mem::replace(&mut self.payload.compilation_target, compilation_target);
 
         while let Some(target_pos_opt) = clause_target_poses.pop() {
             match target_pos_opt {
@@ -475,7 +465,8 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
 
             let old_index_ptr = code_index.replace(IndexPtr::Undefined);
 
-            self.payload.retraction_info
+            self.payload
+                .retraction_info
                 .push_record(RetractionRecord::ReplacedModulePredicate(
                     module_name,
                     *key,
@@ -484,7 +475,8 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
         }
 
         for (key, skeleton) in removed_module.extensible_predicates.drain(..) {
-            self.payload.retraction_info
+            self.payload
+                .retraction_info
                 .push_record(RetractionRecord::RemovedSkeleton(
                     CompilationTarget::Module(module_name),
                     key,
@@ -492,7 +484,10 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                 ));
         }
 
-        self.wam_prelude.indices.modules.insert(module_name, removed_module);
+        self.wam_prelude
+            .indices
+            .modules
+            .insert(module_name, removed_module);
     }
 
     pub(super) fn remove_module_exports(&mut self, module_name: Atom) {
@@ -517,14 +512,15 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                                 if module_code_index.get() == target_code_index.get() =>
                             {
                                 let old_index_ptr = target_code_index.replace(IndexPtr::Undefined);
-                                retraction_info.push_record(predicate_retractor(*key, old_index_ptr));
+                                retraction_info
+                                    .push_record(predicate_retractor(*key, old_index_ptr));
                             }
                             _ => {}
                         }
                     }
                     ModuleExport::OpDecl(op_decl) => {
-                        let op_dir_value_opt =
-                            op_dir.remove(&(op_decl.name, fixity(op_decl.op_desc.get_spec() as u32)));
+                        let op_dir_value_opt = op_dir
+                            .remove(&(op_decl.name, fixity(op_decl.op_desc.get_spec() as u32)));
 
                         if let Some(op_desc) = op_dir_value_opt {
                             retraction_info.push_record(op_retractor(*op_decl, op_desc));
@@ -545,9 +541,7 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     RetractionRecord::ReplacedUserOp,
                 );
             }
-            CompilationTarget::Module(target_module_name)
-                if target_module_name != module_name =>
-            {
+            CompilationTarget::Module(target_module_name) if target_module_name != module_name => {
                 let predicate_retractor = |key, index_ptr| {
                     RetractionRecord::ReplacedModulePredicate(module_name, key, index_ptr)
                 };
@@ -556,7 +550,12 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     RetractionRecord::ReplacedModuleOp(module_name, op_decl, op_desc)
                 };
 
-                if let Some(module) = self.wam_prelude.indices.modules.get_mut(&target_module_name) {
+                if let Some(module) = self
+                    .wam_prelude
+                    .indices
+                    .modules
+                    .get_mut(&target_module_name)
+                {
                     remove_module_exports(
                         &removed_module,
                         &mut module.code_dir,
@@ -572,7 +571,10 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             CompilationTarget::Module(_) => {}
         };
 
-        self.wam_prelude.indices.modules.insert(module_name, removed_module);
+        self.wam_prelude
+            .indices
+            .modules
+            .insert(module_name, removed_module);
     }
 
     fn get_or_insert_local_code_index(
@@ -756,10 +758,7 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             ClauseType::Named(arity, name, _) => {
                 let payload_compilation_target = self.payload.compilation_target;
 
-                let idx = self.get_or_insert_code_index(
-                    (name, arity),
-                    payload_compilation_target,
-                );
+                let idx = self.get_or_insert_code_index((name, arity), payload_compilation_target);
 
                 ClauseType::Named(arity, name, idx)
             }
@@ -802,19 +801,18 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     .insert(key, meta_specs)
                 {
                     Some(old_meta_specs) => {
-                        self.payload.retraction_info
-                            .push_record(RetractionRecord::ReplacedMetaPredicate(
+                        self.payload.retraction_info.push_record(
+                            RetractionRecord::ReplacedMetaPredicate(
                                 module_name,
                                 key.0,
                                 old_meta_specs,
-                            ));
+                            ),
+                        );
                     }
                     None => {
-                        self.payload.retraction_info
-                            .push_record(RetractionRecord::AddedMetaPredicate(
-                                module_name,
-                                key,
-                            ));
+                        self.payload
+                            .retraction_info
+                            .push_record(RetractionRecord::AddedMetaPredicate(module_name, key));
                     }
                 }
             }
@@ -841,17 +839,16 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     None => {
                         self.add_dynamically_generated_module(module_name);
 
-                        if let Some(module) = self.wam_prelude.indices.modules.get_mut(&module_name) {
+                        if let Some(module) = self.wam_prelude.indices.modules.get_mut(&module_name)
+                        {
                             module.meta_predicates.insert(key.clone(), meta_specs);
                         } else {
                             unreachable!()
                         }
 
-                        self.payload.retraction_info
-                            .push_record(RetractionRecord::AddedMetaPredicate(
-                                module_name.clone(),
-                                key,
-                            ));
+                        self.payload.retraction_info.push_record(
+                            RetractionRecord::AddedMetaPredicate(module_name.clone(), key),
+                        );
                     }
                 }
             }
@@ -874,10 +871,14 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             &mut module.meta_predicates,
         );
 
-        self.payload.retraction_info
+        self.payload
+            .retraction_info
             .push_record(RetractionRecord::AddedModule(module_name.clone()));
 
-        self.wam_prelude.indices.modules.insert(module_name.clone(), module);
+        self.wam_prelude
+            .indices
+            .modules
+            .insert(module_name.clone(), module);
     }
 
     fn import_builtins_in_module(
@@ -941,9 +942,7 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
 
                     if is_dynamic {
                         let clause_clause_compilation_target = match compilation_target {
-                            CompilationTarget::User => {
-                                CompilationTarget::Module(atom!("builtins"))
-                            }
+                            CompilationTarget::User => CompilationTarget::Module(atom!("builtins")),
                             module => module.clone(),
                         };
 
@@ -954,7 +953,8 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     }
                 }
 
-                self.payload.retraction_info
+                self.payload
+                    .retraction_info
                     .push_record(RetractionRecord::ReplacedModule(
                         old_module_decl,
                         listing_src.clone(),
@@ -1028,7 +1028,12 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     )?;
                 }
                 CompilationTarget::Module(ref defining_module_name) => {
-                    match self.wam_prelude.indices.modules.get_mut(defining_module_name) {
+                    match self
+                        .wam_prelude
+                        .indices
+                        .modules
+                        .get_mut(defining_module_name)
+                    {
                         Some(ref mut target_module) => {
                             let payload: &mut LoadStatePayload<_> = &mut self.payload;
 
@@ -1083,7 +1088,12 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     )?;
                 }
                 CompilationTarget::Module(ref defining_module_name) => {
-                    match self.wam_prelude.indices.modules.get_mut(defining_module_name) {
+                    match self
+                        .wam_prelude
+                        .indices
+                        .modules
+                        .get_mut(defining_module_name)
+                    {
                         Some(ref mut target_module) => {
                             let payload: &mut LoadStatePayload<_> = &mut self.payload;
 
@@ -1112,7 +1122,9 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             self.wam_prelude.indices.modules.insert(module_name, module);
             Ok(())
         } else {
-            Err(SessionError::ExistenceError(ExistenceError::Module(module_name)))
+            Err(SessionError::ExistenceError(ExistenceError::Module(
+                module_name,
+            )))
         }
     }
 
@@ -1125,7 +1137,11 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                 let file = File::open(&path_buf)?;
 
                 (
-                    Stream::from_file_as_input(filename, file, &mut LS::machine_st(&mut self.payload).arena),
+                    Stream::from_file_as_input(
+                        filename,
+                        file,
+                        &mut LS::machine_st(&mut self.payload).arena,
+                    ),
                     ListingSource::File(filename, path_buf),
                 )
             }
@@ -1134,7 +1150,10 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                     if let Some(ref module) = self.wam_prelude.indices.modules.get(&library) {
                         if let ListingSource::DynamicallyGenerated = &module.listing_src {
                             (
-                                Stream::from_static_string(*code, &mut LS::machine_st(&mut self.payload).arena),
+                                Stream::from_static_string(
+                                    *code,
+                                    &mut LS::machine_st(&mut self.payload).arena,
+                                ),
                                 ListingSource::User,
                             )
                         } else {
@@ -1142,7 +1161,10 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                         }
                     } else {
                         (
-                            Stream::from_static_string(*code, &mut LS::machine_st(&mut self.payload).arena),
+                            Stream::from_static_string(
+                                *code,
+                                &mut LS::machine_st(&mut self.payload).arena,
+                            ),
                             ListingSource::User,
                         )
                     }
@@ -1161,14 +1183,15 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             );
 
             let subloader: Loader<'_, BootstrappingLoadState> = Loader {
-                payload: BootstrappingLoadState(
-                    LoadStatePayload::new(self.wam_prelude.code.len(), term_stream)
-                ),
+                payload: BootstrappingLoadState(LoadStatePayload::new(
+                    self.wam_prelude.code.len(),
+                    term_stream,
+                )),
                 wam_prelude: MachinePreludeView {
                     indices: self.wam_prelude.indices,
                     code: self.wam_prelude.code,
                     load_contexts: self.wam_prelude.load_contexts,
-                }
+                },
             };
 
             subloader.load()?
@@ -1195,7 +1218,11 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                 let file = File::open(&path_buf)?;
 
                 (
-                    Stream::from_file_as_input(filename, file, &mut LS::machine_st(&mut self.payload).arena),
+                    Stream::from_file_as_input(
+                        filename,
+                        file,
+                        &mut LS::machine_st(&mut self.payload).arena,
+                    ),
                     ListingSource::File(filename, path_buf),
                 )
             }
@@ -1205,7 +1232,10 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
                         return self.import_qualified_module(library, exports);
                     } else {
                         (
-                            Stream::from_static_string(*code, &mut LS::machine_st(&mut self.payload).arena),
+                            Stream::from_static_string(
+                                *code,
+                                &mut LS::machine_st(&mut self.payload).arena,
+                            ),
                             ListingSource::User,
                         )
                     }
@@ -1224,14 +1254,15 @@ impl<'a, LS: LoadState<'a>> Loader<'a, LS> {
             );
 
             let subloader: Loader<'_, BootstrappingLoadState> = Loader {
-                payload: BootstrappingLoadState(
-                    LoadStatePayload::new(self.wam_prelude.code.len(), term_stream),
-                ),
+                payload: BootstrappingLoadState(LoadStatePayload::new(
+                    self.wam_prelude.code.len(),
+                    term_stream,
+                )),
                 wam_prelude: MachinePreludeView {
                     indices: self.wam_prelude.indices,
                     code: self.wam_prelude.code,
                     load_contexts: self.wam_prelude.load_contexts,
-                }
+                },
             };
 
             subloader.load()?

@@ -25,10 +25,7 @@ type SubtermDeque = VecDeque<(usize, usize)>;
 // pub(crate) type PrologStream = ParsingStream<Stream>;
 
 impl MachineState {
-    pub(crate) fn devour_whitespace(
-        &mut self,
-        mut inner: Stream,
-    ) -> Result<bool, ParserError> {
+    pub(crate) fn devour_whitespace(&mut self, mut inner: Stream) -> Result<bool, ParserError> {
         let mut parser = Parser::new(inner, self);
 
         parser.devour_whitespace()?;
@@ -53,7 +50,11 @@ impl MachineState {
         };
 
         inner.add_lines_read(num_lines_read);
-        Ok(write_term_to_heap(&term, &mut self.heap, &mut self.atom_tbl))
+        Ok(write_term_to_heap(
+            &term,
+            &mut self.heap,
+            &mut self.atom_tbl,
+        ))
     }
 }
 
@@ -182,7 +183,7 @@ impl Read for ReadlineStream {
                 self.call_readline()?;
                 self.pending_input.read(buf)
             }
-            result => result
+            result => result,
         }
     }
 }
@@ -192,27 +193,25 @@ impl CharRead for ReadlineStream {
         loop {
             let pos = self.pending_input.position() as usize;
 
-            match self.pending_input.get_ref()[pos ..].chars().next() {
+            match self.pending_input.get_ref()[pos..].chars().next() {
                 Some('\u{0}') => {
                     return Some(Ok('\u{0}'));
                 }
                 Some(c) => {
                     return Some(Ok(c));
                 }
-                None => {
-                    match self.call_readline() {
-                        Err(e) => {
-                            return Some(Err(e));
-                        }
-                        Ok(0) => {
-                            self.pending_input.get_mut().push('\u{0}');
-                            return Some(Ok('\u{0}'));
-                        }
-                        _ => {
-                            set_prompt(false);
-                        }
+                None => match self.call_readline() {
+                    Err(e) => {
+                        return Some(Err(e));
                     }
-                }
+                    Ok(0) => {
+                        self.pending_input.get_mut().push('\u{0}');
+                        return Some(Ok('\u{0}'));
+                    }
+                    _ => {
+                        set_prompt(false);
+                    }
+                },
             }
         }
     }
@@ -224,7 +223,8 @@ impl CharRead for ReadlineStream {
 
     fn put_back_char(&mut self, c: char) {
         let offset = self.pending_input.position() as usize;
-        self.pending_input.set_position((offset - c.len_utf8()) as u64);
+        self.pending_input
+            .set_position((offset - c.len_utf8()) as u64);
     }
 }
 
@@ -284,17 +284,18 @@ impl<'a, 'b> TermWriter<'a, 'b> {
         match term {
             &TermRef::Cons(..) => list_loc_as_cell!(h),
             &TermRef::AnonVar(_) | &TermRef::Var(..) => heap_loc_as_cell!(h),
-            &TermRef::PartialString(_, _, ref src, None) =>
+            &TermRef::PartialString(_, _, ref src, None) => {
                 if src.as_str().is_empty() {
                     empty_list_as_cell!()
                 } else if self.heap[h].get_tag() == HeapCellValueTag::CStr {
                     heap_loc_as_cell!(h)
                 } else {
                     pstr_loc_as_cell!(h)
-                },
+                }
+            }
             &TermRef::PartialString(..) => pstr_loc_as_cell!(h),
             &TermRef::Literal(_, _, literal) => HeapCellValue::from(*literal),
-            &TermRef::Clause(_,_,_,subterms) if subterms.len() == 0 => heap_loc_as_cell!(h),
+            &TermRef::Clause(_, _, _, subterms) if subterms.len() == 0 => heap_loc_as_cell!(h),
             &TermRef::Clause(..) => str_loc_as_cell!(h),
         }
     }

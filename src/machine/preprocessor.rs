@@ -39,11 +39,7 @@ where
     term
 }
 
-pub(crate) fn to_op_decl(
-    prec: u16,
-    spec: Atom,
-    name: Atom,
-) -> Result<OpDecl, CompilationError> {
+pub(crate) fn to_op_decl(prec: u16, spec: Atom, name: Atom) -> Result<OpDecl, CompilationError> {
     match spec {
         atom!("xfx") => Ok(OpDecl::new(OpDesc::build_with(prec, XFX as u8), name)),
         atom!("xfy") => Ok(OpDecl::new(OpDesc::build_with(prec, XFY as u8), name)),
@@ -95,12 +91,14 @@ fn setup_predicate_indicator(term: &mut Term) -> Result<PredicateKey, Compilatio
                 Term::Literal(_, Literal::Integer(n)) => n.to_usize(),
                 Term::Literal(_, Literal::Fixnum(n)) => usize::try_from(n.get_num()).ok(),
                 _ => None,
-            }.ok_or(CompilationError::InvalidModuleExport)?;
+            }
+            .ok_or(CompilationError::InvalidModuleExport)?;
 
             let name = match name {
                 Term::Literal(_, Literal::Atom(name)) => Some(name),
                 _ => None,
-            }.ok_or(CompilationError::InvalidModuleExport)?;
+            }
+            .ok_or(CompilationError::InvalidModuleExport)?;
 
             if *slash == atom!("/") {
                 Ok((name, arity))
@@ -185,7 +183,8 @@ fn setup_module_decl(
     let name = match name {
         Term::Literal(_, Literal::Atom(name)) => Some(name),
         _ => None,
-    }.ok_or(CompilationError::InvalidModuleDecl)?;
+    }
+    .ok_or(CompilationError::InvalidModuleDecl)?;
 
     let exports = setup_module_export_list(export_list, atom_tbl)?;
 
@@ -194,9 +193,7 @@ fn setup_module_decl(
 
 fn setup_use_module_decl(mut terms: Vec<Term>) -> Result<ModuleSource, CompilationError> {
     match terms.pop().unwrap() {
-        Term::Clause(_, name, mut terms)
-            if name == atom!("library") && terms.len() == 1 =>
-        {
+        Term::Clause(_, name, mut terms) if name == atom!("library") && terms.len() == 1 => {
             match terms.pop().unwrap() {
                 Term::Literal(_, Literal::Atom(name)) => Ok(ModuleSource::Library(name)),
                 _ => Err(CompilationError::InvalidModuleDecl),
@@ -215,9 +212,7 @@ fn setup_qualified_import(
 ) -> Result<UseModuleExport, CompilationError> {
     let mut export_list = terms.pop().unwrap();
     let module_src = match terms.pop().unwrap() {
-        Term::Clause(_, name, mut terms)
-            if name == atom!("library") && terms.len() == 1 =>
-        {
+        Term::Clause(_, name, mut terms) if name == atom!("library") && terms.len() == 1 => {
             match terms.pop().unwrap() {
                 Term::Literal(_, Literal::Atom(name)) => Ok(ModuleSource::Library(name)),
                 _ => Err(CompilationError::InvalidModuleDecl),
@@ -442,11 +437,7 @@ fn check_for_internal_if_then(terms: &mut Vec<Term>) {
 
         let tail_term = conq_terms.pop_back().unwrap();
 
-        terms.push(fold_by_str(
-            conq_terms.into_iter(),
-            tail_term,
-            atom!(","),
-        ));
+        terms.push(fold_by_str(conq_terms.into_iter(), tail_term, atom!(",")));
     }
 }
 
@@ -602,11 +593,7 @@ impl Preprocessor {
         let back_term = prec_seq.pop().unwrap();
         let front_term = prec_seq.pop().unwrap();
 
-        let body_term = Term::Clause(
-            Cell::default(),
-            comma_sym,
-            vec![front_term, back_term],
-        );
+        let body_term = Term::Clause(Cell::default(), comma_sym, vec![front_term, back_term]);
 
         self.fabricate_rule(fold_by_str(prec_seq.into_iter(), body_term, comma_sym))
     }

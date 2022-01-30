@@ -112,7 +112,8 @@ impl<'a> QueryIterator<'a> {
     fn new(term: &'a QueryTerm) -> Self {
         match term {
             &QueryTerm::Clause(ref cell, ClauseType::CallN(arity), ref terms, _) => {
-                let state = TermIterState::Clause(Level::Root, 1, cell, ClauseType::CallN(arity), terms);
+                let state =
+                    TermIterState::Clause(Level::Root, 1, cell, ClauseType::CallN(arity), terms);
                 QueryIterator {
                     state_stack: vec![state],
                 }
@@ -189,13 +190,15 @@ impl<'a> Iterator for QueryIterator<'a> {
                     }
                 }
                 TermIterState::InitialCons(lvl, cell, head, tail) => {
-                    self.state_stack.push(TermIterState::FinalCons(lvl, cell, head, tail));
+                    self.state_stack
+                        .push(TermIterState::FinalCons(lvl, cell, head, tail));
 
                     self.push_subterm(lvl.child_level(), tail);
                     self.push_subterm(lvl.child_level(), head);
                 }
                 TermIterState::InitialPartialString(lvl, cell, string, tail) => {
-                    self.state_stack.push(TermIterState::FinalPartialString(lvl, cell, string, tail));
+                    self.state_stack
+                        .push(TermIterState::FinalPartialString(lvl, cell, string, tail));
 
                     if let Some(tail) = tail {
                         self.push_subterm(lvl.child_level(), tail);

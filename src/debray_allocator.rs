@@ -224,8 +224,7 @@ impl<'a> Allocator<'a> for DebrayAllocator {
         lvl: Level,
         term_loc: GenContext,
         target: &mut Vec<Instruction>,
-    )
-    where
+    ) where
         Target: CompilationTarget<'a>,
     {
         let r = RegType::Temp(self.alloc_reg_to_non_var());

@@ -159,7 +159,8 @@ impl<'a> IndexingCodeMergingPtr<'a> {
         };
 
         let indexing_code_len = self.indexing_code.len();
-        self.indexing_code.push(IndexingLine::IndexedChoice(third_level_index));
+        self.indexing_code
+            .push(IndexingLine::IndexedChoice(third_level_index));
 
         match &mut self.indexing_code[self.offset] {
             IndexingLine::Indexing(IndexingInstruction::SwitchOnConstant(ref mut constants)) => {
@@ -187,7 +188,8 @@ impl<'a> IndexingCodeMergingPtr<'a> {
         };
 
         let indexing_code_len = self.indexing_code.len();
-        self.indexing_code.push(IndexingLine::DynamicIndexedChoice(third_level_index));
+        self.indexing_code
+            .push(IndexingLine::DynamicIndexedChoice(third_level_index));
 
         match &mut self.indexing_code[self.offset] {
             IndexingLine::Indexing(IndexingInstruction::SwitchOnConstant(ref mut constants)) => {
@@ -274,10 +276,8 @@ impl<'a> IndexingCodeMergingPtr<'a> {
                             );
                         }
                         None | Some(IndexingCodePtr::Fail) => {
-                            constants.insert(
-                                overlapping_constant,
-                                IndexingCodePtr::External(index),
-                            );
+                            constants
+                                .insert(overlapping_constant, IndexingCodePtr::External(index));
                         }
                         Some(IndexingCodePtr::DynamicExternal(o)) => {
                             self.add_dynamic_indexed_choice_for_constant(
@@ -344,16 +344,10 @@ impl<'a> IndexingCodeMergingPtr<'a> {
                 IndexingLine::Indexing(IndexingInstruction::SwitchOnConstant(constants)) => {
                     match constants.get(&constant).cloned() {
                         None | Some(IndexingCodePtr::Fail) if self.is_dynamic => {
-                            constants.insert(
-                                constant,
-                                IndexingCodePtr::DynamicExternal(index),
-                            );
+                            constants.insert(constant, IndexingCodePtr::DynamicExternal(index));
                         }
                         None | Some(IndexingCodePtr::Fail) => {
-                            constants.insert(
-                                constant,
-                                IndexingCodePtr::External(index),
-                            );
+                            constants.insert(constant, IndexingCodePtr::External(index));
                         }
                         Some(IndexingCodePtr::DynamicExternal(o)) => {
                             self.add_dynamic_indexed_choice_for_constant(o, constant, index);
@@ -441,7 +435,8 @@ impl<'a> IndexingCodeMergingPtr<'a> {
         };
 
         let indexing_code_len = self.indexing_code.len();
-        self.indexing_code.push(IndexingLine::IndexedChoice(third_level_index));
+        self.indexing_code
+            .push(IndexingLine::IndexedChoice(third_level_index));
 
         match &mut self.indexing_code[self.offset] {
             IndexingLine::Indexing(IndexingInstruction::SwitchOnStructure(ref mut structures)) => {
@@ -469,7 +464,8 @@ impl<'a> IndexingCodeMergingPtr<'a> {
         };
 
         let indexing_code_len = self.indexing_code.len();
-        self.indexing_code.push(IndexingLine::DynamicIndexedChoice(third_level_index));
+        self.indexing_code
+            .push(IndexingLine::DynamicIndexedChoice(third_level_index));
 
         match &mut self.indexing_code[self.offset] {
             IndexingLine::Indexing(IndexingInstruction::SwitchOnStructure(ref mut structures)) => {
@@ -612,7 +608,7 @@ pub(crate) fn merge_clause_index(
     target_indexing_code: &mut Vec<IndexingLine>,
     skeleton: &mut [ClauseIndexInfo], // the clause to be merged is the last element in the skeleton.
     retracted_clauses: &Option<Vec<ClauseIndexInfo>>,
-    new_clause_loc: usize,            // the absolute location of the new clause in the code vector.
+    new_clause_loc: usize, // the absolute location of the new clause in the code vector.
     append_or_prepend: AppendOrPrepend,
 ) {
     let opt_arg_index_key = match append_or_prepend {
@@ -635,11 +631,7 @@ pub(crate) fn merge_clause_index(
             for overlapping_constant in overlapping_constants {
                 merging_ptr.offset = 0;
 
-                merging_ptr.index_overlapping_constant(
-                    *constant,
-                    *overlapping_constant,
-                    offset,
-                );
+                merging_ptr.index_overlapping_constant(*constant, *overlapping_constant, offset);
             }
         }
         OptArgIndexKey::Structure(_, index_loc, name, arity) => {
@@ -1116,9 +1108,11 @@ pub(crate) fn constant_key_alternatives(
         */
         Literal::Integer(ref n) => {
             if let Some(n) = n.to_isize() {
-                Fixnum::build_with_checked(n as i64).map(|n| {
-                    constants.push(Literal::Fixnum(n));
-                }).unwrap();
+                Fixnum::build_with_checked(n as i64)
+                    .map(|n| {
+                        constants.push(Literal::Fixnum(n));
+                    })
+                    .unwrap();
             }
         }
         /*
@@ -1437,11 +1431,7 @@ impl<I: Indexer> CodeOffsets<I> {
         code.push_back(I::compute_index(is_initial_index, index));
 
         for constant in &overlapping_constants {
-            let code = self
-                .indices
-                .constants()
-                .entry(*constant)
-                .or_insert(sdeq![]);
+            let code = self.indices.constants().entry(*constant).or_insert(sdeq![]);
 
             let is_initial_index = code.is_empty();
             let index = I::compute_index(is_initial_index, index);

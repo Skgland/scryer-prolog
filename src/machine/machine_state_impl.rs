@@ -1,6 +1,5 @@
 use crate::arena::*;
 use crate::atom_table::*;
-use crate::types::*;
 use crate::forms::*;
 use crate::heap_iter::*;
 use crate::machine::attributed_variables::*;
@@ -13,6 +12,7 @@ use crate::machine::partial_string::*;
 use crate::machine::stack::*;
 use crate::parser::ast::*;
 use crate::parser::rug::{Integer, Rational};
+use crate::types::*;
 
 use ordered_float::*;
 
@@ -49,7 +49,7 @@ impl MachineState {
             block: 0,
             ball: Ball::new(),
             lifted_heap: Heap::new(),
-            interms: vec![Number::default();256],
+            interms: vec![Number::default(); 256],
             cont_pts: Vec::with_capacity(256),
             cwil: CWIL::new(),
             flags: MachineFlags::default(),
@@ -58,8 +58,8 @@ impl MachineState {
             dynamic_mode: FirstOrNext::First,
             unify_fn: MachineState::unify,
             bind_fn: MachineState::bind,
-            run_cleaners_fn: |_| { false },
-            increment_call_count_fn: |_| { Ok(()) },
+            run_cleaners_fn: |_| false,
+            increment_call_count_fn: |_| Ok(()),
         }
     }
 
@@ -147,9 +147,8 @@ impl MachineState {
                         h as u64,
                     ));
 
-                    self.trail.push(TrailEntry::from_bytes(
-                        list_loc_as_cell!(l).into_bytes()
-                    ));
+                    self.trail
+                        .push(TrailEntry::from_bytes(list_loc_as_cell!(l).into_bytes()));
 
                     self.tr += 2;
                 }
@@ -168,9 +167,8 @@ impl MachineState {
                     key_atom.index as u64,
                 ));
 
-                self.trail.push(TrailEntry::from_bytes(
-                    value_cell.into_bytes(),
-                ));
+                self.trail
+                    .push(TrailEntry::from_bytes(value_cell.into_bytes()));
 
                 self.tr += 2;
             }
@@ -387,8 +385,8 @@ impl MachineState {
                     self.pdl.push(pstr_iter1.focus);
                 }
             }
-            continuable @ PStrCmpResult::FirstIterContinuable(iteratee) |
-            continuable @ PStrCmpResult::SecondIterContinuable(iteratee) => {
+            continuable @ PStrCmpResult::FirstIterContinuable(iteratee)
+            | continuable @ PStrCmpResult::SecondIterContinuable(iteratee) => {
                 if continuable.is_second_iter() {
                     std::mem::swap(&mut pstr_iter1, &mut pstr_iter2);
                 }
@@ -1041,8 +1039,8 @@ impl MachineState {
                     self.pdl.push(pstr_iter1.focus);
                 }
             }
-            continuable @ PStrCmpResult::FirstIterContinuable(iteratee) |
-            continuable @ PStrCmpResult::SecondIterContinuable(iteratee) => {
+            continuable @ PStrCmpResult::FirstIterContinuable(iteratee)
+            | continuable @ PStrCmpResult::SecondIterContinuable(iteratee) => {
                 if continuable.is_second_iter() {
                     std::mem::swap(&mut pstr_iter1, &mut pstr_iter2);
                 }
@@ -1419,8 +1417,7 @@ impl MachineState {
                     }
                 )
             }
-            &mut HeapPtr::PStrChar(h, ref mut n) |
-            &mut HeapPtr::PStrLocation(h, ref mut n) => {
+            &mut HeapPtr::PStrChar(h, ref mut n) | &mut HeapPtr::PStrLocation(h, ref mut n) => {
                 read_heap_cell!(self.heap[h],
                     (HeapCellValueTag::PStr, pstr_atom) => {
                         let pstr = PartialString::from(pstr_atom);
@@ -1632,7 +1629,8 @@ impl MachineState {
                                 if iter1.num_steps() == 0 && iter2.num_steps() == 0 {
                                     return match iter2.focus.get_tag() {
                                         HeapCellValueTag::CStr | HeapCellValueTag::PStrLoc => {
-                                            let result = stalled_pstr_iter_handler(iter2, iter1, pdl);
+                                            let result =
+                                                stalled_pstr_iter_handler(iter2, iter1, pdl);
 
                                             if let Some(ordering) = result {
                                                 Some(ordering.reverse())
@@ -1642,9 +1640,7 @@ impl MachineState {
                                                 result
                                             }
                                         }
-                                        _ => {
-                                            stalled_pstr_iter_handler(iter1, iter2, pdl)
-                                        }
+                                        _ => stalled_pstr_iter_handler(iter1, iter2, pdl),
                                     };
                                 }
 
@@ -1849,7 +1845,11 @@ impl MachineState {
         let s = string.as_str();
 
         match heap_pstr_iter.compare_pstr_to_string(s) {
-            Some(PStrPrefixCmpResult { focus, offset, prefix_len }) if prefix_len == s.len() => {
+            Some(PStrPrefixCmpResult {
+                focus,
+                offset,
+                prefix_len,
+            }) if prefix_len == s.len() => {
                 let focus_addr = self.heap[focus];
 
                 read_heap_cell!(focus_addr,
@@ -1914,13 +1914,13 @@ impl MachineState {
 
                     put_partial_string(
                         &mut self.heap,
-                        &string.as_str()[prefix_len ..],
+                        &string.as_str()[prefix_len..],
                         &mut self.atom_tbl,
                     )
                 } else {
                     put_complete_string(
                         &mut self.heap,
-                        &string.as_str()[prefix_len ..],
+                        &string.as_str()[prefix_len..],
                         &mut self.atom_tbl,
                     )
                 };
@@ -2234,7 +2234,7 @@ impl MachineState {
 
         let f_a = if name == atom!(".") && arity == 2 {
             self.heap.push(heap_loc_as_cell!(h));
-            self.heap.push(heap_loc_as_cell!(h+1));
+            self.heap.push(heap_loc_as_cell!(h + 1));
 
             list_loc_as_cell!(h)
         } else {
@@ -2446,8 +2446,7 @@ impl MachineState {
 
         while let Some(iteratee) = heap_pstr_iter.next() {
             match iteratee {
-                PStrIteratee::Char(_, c) =>
-                    chars.push(char_as_cell!(c)),
+                PStrIteratee::Char(_, c) => chars.push(char_as_cell!(c)),
                 PStrIteratee::PStrSegment(_, pstr_atom, n) => {
                     let pstr = PartialString::from(pstr_atom);
                     chars.extend(pstr.as_str_from(n).chars().map(|c| char_as_cell!(c)));

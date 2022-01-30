@@ -39,7 +39,8 @@ pub(crate) enum ValidType {
     InCharacter,
     Integer,
     List,
-    #[allow(unused)] Number,
+    #[allow(unused)]
+    Number,
     Pair,
     //    PredicateIndicator,
     //    Variable
@@ -229,9 +230,11 @@ pub(super) type FunctorStub = [HeapCellValue; 3];
 
 #[inline(always)]
 pub(super) fn functor_stub(name: Atom, arity: usize) -> FunctorStub {
-    [atom_as_cell!(atom!("/"), 2),
-     atom_as_cell!(name),
-     fixnum_as_cell!(Fixnum::build_with(arity as i64))]
+    [
+        atom_as_cell!(atom!("/"), 2),
+        atom_as_cell!(name),
+        fixnum_as_cell!(Fixnum::build_with(arity as i64)),
+    ]
 }
 
 impl MachineState {
@@ -402,11 +405,13 @@ impl MachineState {
     pub(super) fn session_error(&mut self, err: SessionError) -> MachineError {
         match err {
             SessionError::CannotOverwriteBuiltIn(key) => {
-            // SessionError::CannotOverwriteImport(pred_atom) => {
+                // SessionError::CannotOverwriteImport(pred_atom) => {
                 self.permission_error(
                     Permission::Modify,
                     atom!("private_procedure"),
-                    functor_stub(key.0, key.1).into_iter().collect::<MachineStub>(),
+                    functor_stub(key.0, key.1)
+                        .into_iter()
+                        .collect::<MachineStub>(),
                 )
             }
             SessionError::ExistenceError(err) => self.existence_error(err),
@@ -433,7 +438,11 @@ impl MachineState {
             }
             SessionError::NamelessEntry => {
                 let error_atom = atom!("nameless_procedure");
-                self.permission_error(Permission::Create, atom!("static_procedure"), functor!(error_atom))
+                self.permission_error(
+                    Permission::Create,
+                    atom!("static_procedure"),
+                    functor!(error_atom),
+                )
             }
             SessionError::OpIsInfixAndPostFix(op) => {
                 self.permission_error(Permission::Create, atom!("operator"), functor!(op))
@@ -773,7 +782,7 @@ pub enum CycleSearchResult {
     PartialList(usize, Ref), // the list length (up to max), and an offset into the heap.
     ProperList(usize),       // the list length.
     PStrLocation(usize, usize), // list length (up to max), the heap address of the PStrOffset
-    UntouchedList(usize),       // the address of an uniterated Addr::Lis(address).
+    UntouchedList(usize),    // the address of an uniterated Addr::Lis(address).
     UntouchedCStr(Atom, usize),
 }
 
@@ -788,7 +797,7 @@ impl MachineState {
         match self.detect_cycles(list) {
             CycleSearchResult::PartialList(..) => {
                 let err = self.instantiation_error();
-                return Err(self.error_form(err, stub_gen()))
+                return Err(self.error_form(err, stub_gen()));
             }
             CycleSearchResult::NotList => {
                 let err = self.type_error(ValidType::List, list);

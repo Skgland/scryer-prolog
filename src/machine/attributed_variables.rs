@@ -118,8 +118,7 @@ impl MachineState {
             and_frame[i] = self.registers[i];
         }
 
-        and_frame[self.num_of_args + 1] =
-            fixnum_as_cell!(Fixnum::build_with(self.b0 as i64));
+        and_frame[self.num_of_args + 1] = fixnum_as_cell!(Fixnum::build_with(self.b0 as i64));
         and_frame[self.num_of_args + 2] =
             fixnum_as_cell!(Fixnum::build_with(self.num_of_args as i64));
         and_frame[self.num_of_args + 3] =

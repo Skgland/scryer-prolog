@@ -45,9 +45,9 @@ impl PartialString {
     #[inline]
     pub(super) fn new<'a>(src: &'a str, atom_tbl: &mut AtomTable) -> Option<(Self, &'a str)> {
         let terminator_idx = scan_for_terminator(src.chars());
-        let pstr = PartialString(atom_tbl.build_with(&src[.. terminator_idx]));
+        let pstr = PartialString(atom_tbl.build_with(&src[..terminator_idx]));
 
-        Some(if terminator_idx <  src.as_bytes().len() {
+        Some(if terminator_idx < src.as_bytes().len() {
             (pstr, &src[terminator_idx + 1..])
         } else {
             (pstr, "")
@@ -117,7 +117,7 @@ impl<'a> HeapPStrIter<'a> {
         };
 
         while let Some(iteratee) = self.next() {
-            result.focus  = iteratee.focus();
+            result.focus = iteratee.focus();
             result.offset = iteratee.offset();
 
             match iteratee {
@@ -179,7 +179,7 @@ impl<'a> HeapPStrIter<'a> {
         self.brent_st.hare = self.orig_focus;
         self.brent_st.tortoise = self.orig_focus;
 
-        for _ in 0 .. self.brent_st.lam {
+        for _ in 0..self.brent_st.lam {
             self.brent_st.hare = self.step(self.brent_st.hare).unwrap().next_hare;
         }
 
@@ -215,37 +215,37 @@ impl<'a> HeapPStrIter<'a> {
         let mut focus = self.focus;
 
         loop {
-           read_heap_cell!(focus,
-               (HeapCellValueTag::CStr | HeapCellValueTag::PStrLoc) => {
-                   return true;
-               }
-               (HeapCellValueTag::Atom, (name, arity)) => { // TODO: use Str here?
-                   return name == atom!(".") && arity == 2;
-               }
-               (HeapCellValueTag::Lis, h) => {
-                   return read_heap_cell!(self.heap[h],
-                       (HeapCellValueTag::Atom, (name, arity)) => {
-                           arity == 0 && name.as_char().is_some()
-                       }
-                       (HeapCellValueTag::Char) => {
-                           true
-                       }
-                       _ => {
-                           false
-                       }
-                   );
-               }
-               (HeapCellValueTag::AttrVar | HeapCellValueTag::Var, h) => {
-                   if focus == self.heap[h] {
-                       return false;
-                   }
+            read_heap_cell!(focus,
+                (HeapCellValueTag::CStr | HeapCellValueTag::PStrLoc) => {
+                    return true;
+                }
+                (HeapCellValueTag::Atom, (name, arity)) => { // TODO: use Str here?
+                    return name == atom!(".") && arity == 2;
+                }
+                (HeapCellValueTag::Lis, h) => {
+                    return read_heap_cell!(self.heap[h],
+                        (HeapCellValueTag::Atom, (name, arity)) => {
+                            arity == 0 && name.as_char().is_some()
+                        }
+                        (HeapCellValueTag::Char) => {
+                            true
+                        }
+                        _ => {
+                            false
+                        }
+                    );
+                }
+                (HeapCellValueTag::AttrVar | HeapCellValueTag::Var, h) => {
+                    if focus == self.heap[h] {
+                        return false;
+                    }
 
-                   focus = self.heap[h];
-               }
-               _ => {
-                   return false;
-               }
-           );
+                    focus = self.heap[h];
+                }
+                _ => {
+                    return false;
+                }
+            );
         }
     }
 
@@ -352,13 +352,15 @@ impl<'a> HeapPStrIter<'a> {
     }
 
     fn pre_cycle_discovery_stepper(&mut self) -> Option<PStrIteratee> {
-        let PStrIterStep { iteratee, next_hare } =
-            match self.step(self.brent_st.hare) {
-                Some(results) => results,
-                None => {
-                    return None;
-                }
-            };
+        let PStrIterStep {
+            iteratee,
+            next_hare,
+        } = match self.step(self.brent_st.hare) {
+            Some(results) => results,
+            None => {
+                return None;
+            }
+        };
 
         self.focus = self.heap[iteratee.focus()];
 
@@ -389,13 +391,15 @@ impl<'a> HeapPStrIter<'a> {
             return None;
         }
 
-        let PStrIterStep { iteratee, next_hare } =
-            match self.step(self.brent_st.hare) {
-                Some(results) => results,
-                None => {
-                    return None;
-                }
-            };
+        let PStrIterStep {
+            iteratee,
+            next_hare,
+        } = match self.step(self.brent_st.hare) {
+            Some(results) => results,
+            None => {
+                return None;
+            }
+        };
 
         self.focus = self.heap[next_hare];
         self.brent_st.hare = next_hare;
@@ -483,11 +487,8 @@ impl<'a> Iterator for PStrCharsIter<'a> {
 
                     match pstr.as_str_from(n).chars().next() {
                         Some(c) => {
-                            self.item = Some(PStrIteratee::PStrSegment(
-                                f1,
-                                pstr_atom,
-                                n + c.len_utf8(),
-                            ));
+                            self.item =
+                                Some(PStrIteratee::PStrSegment(f1, pstr_atom, n + c.len_utf8()));
 
                             return Some(c);
                         }
@@ -653,8 +654,10 @@ pub fn compare_pstr_prefixes<'a>(
                             }
                         }
                     }
-                    (PStrIteratee::PStrSegment(f1, pstr1_atom, n1),
-                     PStrIteratee::PStrSegment(f2, pstr2_atom, n2)) => {
+                    (
+                        PStrIteratee::PStrSegment(f1, pstr1_atom, n1),
+                        PStrIteratee::PStrSegment(f2, pstr2_atom, n2),
+                    ) => {
                         if pstr1_atom == pstr2_atom && n1 == n2 {
                             cycle_detection_step(i1, i2, &step_1);
                             let both_cyclic = cycle_detection_step(i2, i1, &step_2);
@@ -688,7 +691,8 @@ pub fn compare_pstr_prefixes<'a>(
                                 }
                             }
                             Ordering::Less if str2.starts_with(str1) => {
-                                step_2.iteratee = PStrIteratee::PStrSegment(f2, pstr2_atom, n2 + str1.len());
+                                step_2.iteratee =
+                                    PStrIteratee::PStrSegment(f2, pstr2_atom, n2 + str1.len());
                                 let c1_result = cycle_detection_step(i1, i2, &step_1);
                                 r1 = step(i1, i1.brent_st.hare);
 
@@ -697,7 +701,8 @@ pub fn compare_pstr_prefixes<'a>(
                                 }
                             }
                             Ordering::Greater if str1.starts_with(str2) => {
-                                step_1.iteratee = PStrIteratee::PStrSegment(f1, pstr1_atom, n1 + str2.len());
+                                step_1.iteratee =
+                                    PStrIteratee::PStrSegment(f1, pstr1_atom, n1 + str2.len());
                                 let c2_result = cycle_detection_step(i2, i1, &step_2);
                                 r2 = step(i2, i2.brent_st.hare);
 
@@ -805,7 +810,11 @@ mod test {
             );
             assert_eq!(
                 iter.next(),
-                Some(PStrIteratee::PStrSegment(2, cell_as_atom!(pstr_second_cell), 0))
+                Some(PStrIteratee::PStrSegment(
+                    2,
+                    cell_as_atom!(pstr_second_cell),
+                    0
+                ))
             );
 
             assert_eq!(iter.next(), None);
@@ -824,7 +833,11 @@ mod test {
             );
             assert_eq!(
                 iter.next(),
-                Some(PStrIteratee::PStrSegment(2, cell_as_atom!(pstr_second_cell), 0))
+                Some(PStrIteratee::PStrSegment(
+                    2,
+                    cell_as_atom!(pstr_second_cell),
+                    0
+                ))
             );
 
             assert_eq!(iter.next(), None);
@@ -832,10 +845,14 @@ mod test {
         }
 
         wam.machine_st.heap.pop();
-        wam.machine_st.heap.push(pstr_loc_as_cell!(wam.machine_st.heap.len() + 1));
+        wam.machine_st
+            .heap
+            .push(pstr_loc_as_cell!(wam.machine_st.heap.len() + 1));
 
         wam.machine_st.heap.push(pstr_offset_as_cell!(0));
-        wam.machine_st.heap.push(fixnum_as_cell!(Fixnum::build_with(0)));
+        wam.machine_st
+            .heap
+            .push(fixnum_as_cell!(Fixnum::build_with(0)));
 
         {
             let mut iter = HeapPStrIter::new(&wam.machine_st.heap, 0);
@@ -861,31 +878,25 @@ mod test {
             // construct a structurally similar but different cyclic partial string
             // matching the one beginning at wam.machine_st.heap[0].
 
-            put_partial_string(
-                &mut wam.machine_st.heap,
-                "ab",
-                &mut wam.machine_st.atom_tbl,
-            );
+            put_partial_string(&mut wam.machine_st.heap, "ab", &mut wam.machine_st.atom_tbl);
 
             wam.machine_st.heap.pop();
 
-            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h+2));
+            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h + 2));
 
-            put_partial_string(
-                &mut wam.machine_st.heap,
-                "c ",
-                &mut wam.machine_st.atom_tbl,
-            );
+            put_partial_string(&mut wam.machine_st.heap, "c ", &mut wam.machine_st.atom_tbl);
 
             wam.machine_st.heap.pop();
 
-            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h+4));
+            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h + 4));
 
             wam.machine_st.heap.push(pstr_second_cell);
-            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h+6));
+            wam.machine_st.heap.push(pstr_loc_as_cell!(second_h + 6));
 
             wam.machine_st.heap.push(pstr_offset_as_cell!(second_h));
-            wam.machine_st.heap.push(fixnum_as_cell!(Fixnum::build_with(0)));
+            wam.machine_st
+                .heap
+                .push(fixnum_as_cell!(Fixnum::build_with(0)));
 
             let mut iter1 = HeapPStrIter::new(&wam.machine_st.heap, 0);
             let mut iter2 = HeapPStrIter::new(&wam.machine_st.heap, second_h);
@@ -951,20 +962,11 @@ mod test {
 
         unify!(wam.machine_st, cstr_var_cell, heap_loc_as_cell!(1));
 
-        assert_eq!(
-            wam.machine_st.heap[2],
-            char_as_cell!('a'),
-        );
+        assert_eq!(wam.machine_st.heap[2], char_as_cell!('a'),);
 
-        assert_eq!(
-            wam.machine_st.heap[4],
-            char_as_cell!('b'),
-        );
+        assert_eq!(wam.machine_st.heap[4], char_as_cell!('b'),);
 
-        assert_eq!(
-            wam.machine_st.heap[6],
-            char_as_cell!('c'),
-        );
+        assert_eq!(wam.machine_st.heap[6], char_as_cell!('c'),);
 
         // test "abc" = [X,Y,Z|D].
 
@@ -991,35 +993,20 @@ mod test {
 
         assert_eq!(wam.machine_st.fail, false);
 
-        assert_eq!(
-            wam.machine_st.heap[2],
-            char_as_cell!('a'),
-        );
+        assert_eq!(wam.machine_st.heap[2], char_as_cell!('a'),);
 
-        assert_eq!(
-            wam.machine_st.heap[4],
-            char_as_cell!('b'),
-        );
+        assert_eq!(wam.machine_st.heap[4], char_as_cell!('b'),);
 
-        assert_eq!(
-            wam.machine_st.heap[6],
-            char_as_cell!('c'),
-        );
+        assert_eq!(wam.machine_st.heap[6], char_as_cell!('c'),);
 
-        assert_eq!(
-            wam.machine_st.heap[7],
-            empty_list_as_cell!(),
-        );
+        assert_eq!(wam.machine_st.heap[7], empty_list_as_cell!(),);
 
         // test "d" = [d].
 
         wam.machine_st.heap.clear();
 
-        let cstr_var_cell = put_complete_string(
-            &mut wam.machine_st.heap,
-            "d",
-            &mut wam.machine_st.atom_tbl,
-        );
+        let cstr_var_cell =
+            put_complete_string(&mut wam.machine_st.heap, "d", &mut wam.machine_st.atom_tbl);
 
         wam.machine_st.heap.push(list_loc_as_cell!(2));
         wam.machine_st.heap.push(char_as_cell!('d'));
@@ -1054,20 +1041,11 @@ mod test {
 
         assert_eq!(wam.machine_st.fail, false);
 
-        assert_eq!(
-            wam.machine_st.heap[2],
-            char_as_cell!('a'),
-        );
+        assert_eq!(wam.machine_st.heap[2], char_as_cell!('a'),);
 
-        assert_eq!(
-            wam.machine_st.heap[4],
-            char_as_cell!('b'),
-        );
+        assert_eq!(wam.machine_st.heap[4], char_as_cell!('b'),);
 
-        assert_eq!(
-            wam.machine_st.heap[6],
-            char_as_cell!('c'),
-        );
+        assert_eq!(wam.machine_st.heap[6], char_as_cell!('c'),);
 
         // test "abcdef" = [a,b,c|X].
 
@@ -1092,7 +1070,10 @@ mod test {
         assert_eq!(wam.machine_st.heap[3], pstr_loc_as_cell!(1));
         assert_eq!(wam.machine_st.heap[4], atom_as_cstr_cell!(atom!("abcdef")));
         assert_eq!(wam.machine_st.heap[5], pstr_offset_as_cell!(4));
-        assert_eq!(wam.machine_st.heap[6], fixnum_as_cell!(Fixnum::build_with("abc".len() as i64)));
+        assert_eq!(
+            wam.machine_st.heap[6],
+            fixnum_as_cell!(Fixnum::build_with("abc".len() as i64))
+        );
 
         // test iteration on X = [b,c,b,c,b,c,b,c|...] as an offset.
 
@@ -1101,7 +1082,9 @@ mod test {
         wam.machine_st.heap.push(pstr_as_cell!(atom!("abc")));
         wam.machine_st.heap.push(pstr_loc_as_cell!(2));
         wam.machine_st.heap.push(pstr_offset_as_cell!(0));
-        wam.machine_st.heap.push(fixnum_as_cell!(Fixnum::build_with(1)));
+        wam.machine_st
+            .heap
+            .push(fixnum_as_cell!(Fixnum::build_with(1)));
 
         {
             let mut iter = HeapPStrIter::new(&wam.machine_st.heap, 2);

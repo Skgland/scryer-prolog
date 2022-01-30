@@ -274,8 +274,7 @@ impl UnsafeVarMarker {
 
     pub(crate) fn mark_safe_vars(&mut self, query_instr: &Instruction) -> bool {
         match query_instr {
-            &Instruction::PutVariable(r @ RegType::Temp(_), _) |
-            &Instruction::SetVariable(r) => {
+            &Instruction::PutVariable(r @ RegType::Temp(_), _) | &Instruction::SetVariable(r) => {
                 self.safe_vars.insert(r);
                 true
             }
@@ -285,8 +284,7 @@ impl UnsafeVarMarker {
 
     pub(crate) fn mark_phase(&mut self, query_instr: &Instruction, phase: usize) {
         match query_instr {
-            &Instruction::PutValue(r @ RegType::Perm(_), _) |
-            &Instruction::SetValue(r) => {
+            &Instruction::PutValue(r @ RegType::Perm(_), _) | &Instruction::SetValue(r) => {
                 let p = self.unsafe_vars.entry(r).or_insert(0);
                 *p = phase;
             }

@@ -33,7 +33,11 @@ impl<'a> From<&'a Atom> for Atom {
 impl From<bool> for Atom {
     #[inline]
     fn from(value: bool) -> Self {
-        if value { atom!("true") } else { atom!("false") }
+        if value {
+            atom!("true")
+        } else {
+            atom!("false")
+        }
     }
 }
 
@@ -90,9 +94,11 @@ impl RawBlockTraits for AtomTable {
 #[bitfield]
 #[derive(Copy, Clone, Debug)]
 struct AtomHeader {
-    #[allow(unused)] m: bool,
+    #[allow(unused)]
+    m: bool,
     len: B50,
-    #[allow(unused)] padding: B13,
+    #[allow(unused)]
+    padding: B13,
 }
 
 impl AtomHeader {
@@ -175,7 +181,11 @@ impl Atom {
         let c1 = it.next();
         let c2 = it.next();
 
-        if c2.is_none() { c1 } else { None }
+        if c2.is_none() {
+            c1
+        } else {
+            None
+        }
     }
 
     #[inline]
@@ -269,7 +279,10 @@ impl AtomTable {
 
     #[inline(always)]
     fn lookup_str(&self, string: &str) -> Option<Atom> {
-        STATIC_ATOMS_MAP.get(string).or_else(|| self.table.get(string)).cloned()
+        STATIC_ATOMS_MAP
+            .get(string)
+            .or_else(|| self.table.get(string))
+            .cloned()
     }
 
     pub fn build_with(&mut self, string: &str) -> Atom {
@@ -320,9 +333,12 @@ impl AtomTable {
 pub struct AtomCell {
     name: B46,
     arity: B10,
-    #[allow(unused)] f: bool,
-    #[allow(unused)] m: bool,
-    #[allow(unused)] tag: B6,
+    #[allow(unused)]
+    f: bool,
+    #[allow(unused)]
+    m: bool,
+    #[allow(unused)]
+    tag: B6,
 }
 
 impl AtomCell {

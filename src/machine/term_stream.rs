@@ -1,8 +1,8 @@
 use crate::forms::*;
-use crate::machine::*;
 use crate::machine::load_state::*;
 use crate::machine::loader::*;
 use crate::machine::machine_errors::*;
+use crate::machine::*;
 use crate::parser::ast::*;
 use crate::parser::parser::*;
 
@@ -43,7 +43,10 @@ impl<'a> BootstrappingTermStream<'a> {
         listing_src: ListingSource,
     ) -> Self {
         let parser = Parser::new(stream, machine_st);
-        Self { parser, listing_src }
+        Self {
+            parser,
+            listing_src,
+        }
     }
 }
 

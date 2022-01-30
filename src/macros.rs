@@ -231,12 +231,14 @@ macro_rules! cell_as_stream {
 }
 
 macro_rules! cell_as_load_state_payload {
-    ($cell:expr) => { unsafe {
-        let ptr = cell_as_untyped_arena_ptr!($cell);
-        let ptr = std::mem::transmute::<_, *mut LiveLoadState>(ptr.payload_offset());
+    ($cell:expr) => {
+        unsafe {
+            let ptr = cell_as_untyped_arena_ptr!($cell);
+            let ptr = std::mem::transmute::<_, *mut LiveLoadState>(ptr.payload_offset());
 
-        TypedArenaPtr::new(ptr)
-    }};
+            TypedArenaPtr::new(ptr)
+        }
+    };
 }
 
 macro_rules! match_untyped_arena_ptr_pat_body {
@@ -275,7 +277,8 @@ macro_rules! match_untyped_arena_ptr_pat_body {
         $code
     }};
     ($ptr:ident, TcpListener, $listener:ident, $code:expr) => {{
-        let payload_ptr = unsafe { std::mem::transmute::<_, *mut TcpListener>($ptr.payload_offset()) };
+        let payload_ptr =
+            unsafe { std::mem::transmute::<_, *mut TcpListener>($ptr.payload_offset()) };
         #[allow(unused_mut)]
         let mut $listener = TypedArenaPtr::new(payload_ptr);
         #[allow(unused_braces)]
@@ -319,56 +322,56 @@ macro_rules! match_untyped_arena_ptr {
 }
 
 macro_rules! read_heap_cell_pat_body {
-    ($cell:ident, Cons, $n:ident, $code:expr) => ({
+    ($cell:ident, Cons, $n:ident, $code:expr) => {{
         let $n = cell_as_untyped_arena_ptr!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, F64, $n:ident, $code:expr) => ({
+    }};
+    ($cell:ident, F64, $n:ident, $code:expr) => {{
         let $n = cell_as_f64_ptr!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, Atom, ($name:ident, $arity:ident), $code:expr) => ({
+    }};
+    ($cell:ident, Atom, ($name:ident, $arity:ident), $code:expr) => {{
         let ($name, $arity) = cell_as_atom_cell!($cell).get_name_and_arity();
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, PStr, $atom:ident, $code:expr) => ({
+    }};
+    ($cell:ident, PStr, $atom:ident, $code:expr) => {{
         let $atom = cell_as_atom!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, CStr, $atom:ident, $code:expr) => ({
+    }};
+    ($cell:ident, CStr, $atom:ident, $code:expr) => {{
         let $atom = cell_as_atom!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, CStr | PStr, $atom:ident, $code:expr) => ({
+    }};
+    ($cell:ident, CStr | PStr, $atom:ident, $code:expr) => {{
         let $atom = cell_as_atom!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, PStr | CStr, $atom:ident, $code:expr) => ({
+    }};
+    ($cell:ident, PStr | CStr, $atom:ident, $code:expr) => {{
         let $atom = cell_as_atom!($cell);
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, Fixnum, $value:ident, $code:expr) => ({
+    }};
+    ($cell:ident, Fixnum, $value:ident, $code:expr) => {{
         let $value = Fixnum::from_bytes($cell.into_bytes());
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, Char, $value:ident, $code:expr) => ({
+    }};
+    ($cell:ident, Char, $value:ident, $code:expr) => {{
         let $value = unsafe { char::from_u32_unchecked($cell.get_value() as u32) };
         #[allow(unused_braces)]
         $code
-    });
-    ($cell:ident, $($tags:tt)|+, $value:ident, $code:expr) => ({
+    }};
+    ($cell:ident, $($tags:tt)|+, $value:ident, $code:expr) => {{
         let $value = $cell.get_value() as usize;
         #[allow(unused_braces)]
         $code
-    });
+    }};
 }
 
 macro_rules! read_heap_cell_pat {
@@ -521,7 +524,10 @@ macro_rules! functor_term {
 macro_rules! compare_number_instr {
     ($cmp: expr, $at_1: expr, $at_2: expr) => {{
         $cmp.set_terms($at_1, $at_2);
-        call_clause!(ClauseType::Inlined(InlinedClauseType::CompareNumber($cmp)), 0)
+        call_clause!(
+            ClauseType::Inlined(InlinedClauseType::CompareNumber($cmp)),
+            0
+        )
     }};
 }
 
@@ -569,7 +575,9 @@ macro_rules! index_store {
         IndexStore {
             code_dir: $code_dir,
             extensible_predicates: ExtensiblePredicates::with_hasher(FxBuildHasher::default()),
-            local_extensible_predicates: LocalExtensiblePredicates::with_hasher(FxBuildHasher::default()),
+            local_extensible_predicates: LocalExtensiblePredicates::with_hasher(
+                FxBuildHasher::default(),
+            ),
             global_variables: GlobalVarDir::with_hasher(FxBuildHasher::default()),
             meta_predicates: MetaPredicateDir::with_hasher(FxBuildHasher::default()),
             modules: $modules,

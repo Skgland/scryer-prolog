@@ -242,7 +242,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
         code: &mut Code,
     ) -> RegType {
         let mut target = Code::new();
-        self.marker.mark_var::<QueryInstruction>(name, Level::Shallow, vr, term_loc, &mut target);
+        self.marker
+            .mark_var::<QueryInstruction>(name, Level::Shallow, vr, term_loc, &mut target);
 
         if !target.is_empty() {
             code.extend(target.into_iter());
@@ -296,7 +297,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
         target: &mut Code,
     ) {
         if is_exposed || self.get_var_count(var.as_ref()) > 1 {
-            self.marker.mark_var::<Target>(var.clone(), Level::Deep, cell, term_loc, target);
+            self.marker
+                .mark_var::<Target>(var.clone(), Level::Deep, cell, term_loc, target);
         } else {
             Self::add_or_increment_void_instr::<Target>(target);
         }
@@ -311,7 +313,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
     ) {
         match subterm {
             &Term::AnonVar if is_exposed => {
-                self.marker.mark_anon_var::<Target>(Level::Deep, term_loc, target);
+                self.marker
+                    .mark_anon_var::<Target>(Level::Deep, term_loc, target);
             }
             &Term::AnonVar => {
                 Self::add_or_increment_void_instr::<Target>(target);
@@ -319,7 +322,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
             &Term::Cons(ref cell, ..)
             | &Term::Clause(ref cell, ..)
             | Term::PartialString(ref cell, ..) => {
-                self.marker.mark_non_var::<Target>(Level::Deep, term_loc, cell, target);
+                self.marker
+                    .mark_non_var::<Target>(Level::Deep, term_loc, cell, target);
                 target.push(Target::clause_arg_to_instr(cell.get()));
             }
             &Term::Literal(_, ref constant) => {
@@ -349,11 +353,13 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
                     if let GenContext::Head = term_loc {
                         self.marker.advance_arg();
                     } else {
-                        self.marker.mark_anon_var::<Target>(lvl, term_loc, &mut target);
+                        self.marker
+                            .mark_anon_var::<Target>(lvl, term_loc, &mut target);
                     }
                 }
                 TermRef::Clause(lvl, cell, ct, terms) => {
-                    self.marker.mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
+                    self.marker
+                        .mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
                     target.push(Target::to_structure(ct.name(), terms.len(), cell.get()));
 
                     for subterm in terms {
@@ -361,22 +367,26 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
                     }
                 }
                 TermRef::Cons(lvl, cell, head, tail) => {
-                    self.marker.mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
+                    self.marker
+                        .mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
                     target.push(Target::to_list(lvl, cell.get()));
 
                     self.subterm_to_instr::<Target>(head, term_loc, is_exposed, &mut target);
                     self.subterm_to_instr::<Target>(tail, term_loc, is_exposed, &mut target);
                 }
                 TermRef::Literal(lvl @ Level::Shallow, cell, Literal::String(ref string)) => {
-                    self.marker.mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
+                    self.marker
+                        .mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
                     target.push(Target::to_pstr(lvl, *string, cell.get(), false));
                 }
                 TermRef::Literal(lvl @ Level::Shallow, cell, constant) => {
-                    self.marker.mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
+                    self.marker
+                        .mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
                     target.push(Target::to_constant(lvl, *constant, cell.get()));
                 }
                 TermRef::PartialString(lvl, cell, string, tail) => {
-                    self.marker.mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
+                    self.marker
+                        .mark_non_var::<Target>(lvl, term_loc, cell, &mut target);
 
                     if let Some(tail) = tail {
                         target.push(Target::to_pstr(lvl, string, cell.get(), true));
@@ -401,10 +411,12 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
                         }
                     }
 
-                    self.marker.mark_var::<Target>(var.clone(), lvl, cell, term_loc, &mut target);
+                    self.marker
+                        .mark_var::<Target>(var.clone(), lvl, cell, term_loc, &mut target);
                 }
                 TermRef::Var(lvl @ Level::Shallow, cell, var) => {
-                    self.marker.mark_var::<Target>(var.clone(), lvl, cell, term_loc, &mut target);
+                    self.marker
+                        .mark_var::<Target>(var.clone(), lvl, cell, term_loc, &mut target);
                 }
                 _ => {}
             };
@@ -553,8 +565,10 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
                 }
             },
             &InlinedClauseType::IsCompound(..) => match &terms[0] {
-                &Term::Clause(..) | &Term::Cons(..) | &Term::PartialString(..) |
-                &Term::Literal(_, Literal::String(..)) => {
+                &Term::Clause(..)
+                | &Term::Cons(..)
+                | &Term::PartialString(..)
+                | &Term::Literal(_, Literal::String(..)) => {
                     code.push(instr!("$succeed", 0));
                 }
                 &Term::Var(ref vr, ref name) => {
@@ -747,7 +761,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
         let mut target = Code::new();
 
         self.marker.reset_arg(1);
-        self.marker.mark_var::<QueryInstruction>(var, Level::Shallow, cell, term_loc, &mut target);
+        self.marker
+            .mark_var::<QueryInstruction>(var, Level::Shallow, cell, term_loc, &mut target);
 
         if !target.is_empty() {
             code.extend(target.into_iter());
@@ -923,11 +938,8 @@ impl<'a, 'b: 'a, TermMarker: Allocator<'a>> CodeGenerator<'b, TermMarker> {
             self.marker.reset_at_head(args);
 
             let iter = FactInstruction::iter(term);
-            let mut compiled_fact = self.compile_target::<FactInstruction, _>(
-                iter,
-                GenContext::Head,
-                false,
-            );
+            let mut compiled_fact =
+                self.compile_target::<FactInstruction, _>(iter, GenContext::Head, false);
 
             self.mark_unsafe_fact_vars(&mut compiled_fact);
 

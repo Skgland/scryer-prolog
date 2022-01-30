@@ -47,9 +47,7 @@ macro_rules! drop_iter_on_err {
     };
 }
 
-fn zero_divisor_eval_error(
-    stub_gen: impl Fn() -> FunctorStub + 'static,
-) -> MachineStubGen {
+fn zero_divisor_eval_error(stub_gen: impl Fn() -> FunctorStub + 'static) -> MachineStubGen {
     Box::new(move |machine_st| {
         let eval_error = machine_st.evaluation_error(EvalError::ZeroDivisor);
         let stub = stub_gen();
@@ -58,9 +56,7 @@ fn zero_divisor_eval_error(
     })
 }
 
-fn undefined_eval_error(
-    stub_gen: impl Fn() -> FunctorStub + 'static,
-) -> MachineStubGen {
+fn undefined_eval_error(stub_gen: impl Fn() -> FunctorStub + 'static) -> MachineStubGen {
     Box::new(move |machine_st| {
         let eval_error = machine_st.evaluation_error(EvalError::Undefined);
         let stub = stub_gen();
@@ -1079,16 +1075,17 @@ impl MachineState {
     pub fn get_number(&mut self, at: &ArithmeticTerm) -> Result<Number, MachineStub> {
         match at {
             &ArithmeticTerm::Reg(r) => {
-		        let value = self.store(self.deref(self[r]));
+                let value = self.store(self.deref(self[r]));
 
                 match Number::try_from(value) {
                     Ok(n) => Ok(n),
                     Err(_) => self.arith_eval_by_metacall(value),
                 }
             }
-            &ArithmeticTerm::Interm(i) => {
-                Ok(mem::replace(&mut self.interms[i - 1], Number::Fixnum(Fixnum::build_with(0))))
-            }
+            &ArithmeticTerm::Interm(i) => Ok(mem::replace(
+                &mut self.interms[i - 1],
+                Number::Fixnum(Fixnum::build_with(0)),
+            )),
             &ArithmeticTerm::Number(n) => Ok(n),
         }
     }
@@ -1102,11 +1099,14 @@ impl MachineState {
 
         match rational_from_number(n, caller, &mut self.arena) {
             Ok(r) => Ok(r),
-            Err(e_gen) => Err(e_gen(self))
+            Err(e_gen) => Err(e_gen(self)),
         }
     }
 
-    pub(crate) fn arith_eval_by_metacall(&mut self, value: HeapCellValue) -> Result<Number, MachineStub> {
+    pub(crate) fn arith_eval_by_metacall(
+        &mut self,
+        value: HeapCellValue,
+    ) -> Result<Number, MachineStub> {
         let stub_gen = || functor_stub(atom!("is"), 2);
         let mut iter = stackless_post_order_iter(&mut self.heap, value);
 
@@ -1380,26 +1380,11 @@ mod tests {
         let mut wam = MachineState::new();
         let mut op_dir = default_op_dir();
 
-        op_dir.insert(
-            (atom!("+"), Fixity::In),
-            OpDesc::build_with(500, YFX as u8),
-        );
-        op_dir.insert(
-            (atom!("-"), Fixity::In),
-            OpDesc::build_with(500, YFX as u8),
-        );
-        op_dir.insert(
-            (atom!("-"), Fixity::Pre),
-            OpDesc::build_with(200, FY as u8),
-        );
-        op_dir.insert(
-            (atom!("*"), Fixity::In),
-            OpDesc::build_with(400, YFX as u8),
-        );
-        op_dir.insert(
-            (atom!("/"), Fixity::In),
-            OpDesc::build_with(400, YFX as u8),
-        );
+        op_dir.insert((atom!("+"), Fixity::In), OpDesc::build_with(500, YFX as u8));
+        op_dir.insert((atom!("-"), Fixity::In), OpDesc::build_with(500, YFX as u8));
+        op_dir.insert((atom!("-"), Fixity::Pre), OpDesc::build_with(200, FY as u8));
+        op_dir.insert((atom!("*"), Fixity::In), OpDesc::build_with(400, YFX as u8));
+        op_dir.insert((atom!("/"), Fixity::In), OpDesc::build_with(400, YFX as u8));
 
         let term_write_result =
             parse_and_write_parsed_term_to_heap(&mut wam, "3 + 4 - 1 + 2.", &op_dir).unwrap();

@@ -303,11 +303,7 @@ impl IndexStore {
         }
     }
 
-    pub(crate) fn is_dynamic_predicate(
-        &self,
-        module_name: Atom,
-        key: PredicateKey,
-    ) -> bool {
+    pub(crate) fn is_dynamic_predicate(&self, module_name: Atom, key: PredicateKey) -> bool {
         match module_name {
             atom!("user") => self
                 .extensible_predicates

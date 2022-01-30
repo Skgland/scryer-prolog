@@ -16,11 +16,11 @@ use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt;
 use std::fs::{File, OpenOptions};
-use std::hash::{Hash};
+use std::hash::Hash;
 use std::io;
 use std::io::{Cursor, ErrorKind, Read, Seek, SeekFrom, Write};
 use std::mem;
-use std::net::{TcpStream, Shutdown};
+use std::net::{Shutdown, TcpStream};
 use std::ops::{Deref, DerefMut};
 use std::ptr;
 
@@ -173,7 +173,7 @@ impl CharRead for StaticStringStream {
     #[inline(always)]
     fn peek_char(&mut self) -> Option<std::io::Result<char>> {
         let pos = self.stream.position() as usize;
-        self.stream.get_ref()[pos ..].chars().next().map(Ok)
+        self.stream.get_ref()[pos..].chars().next().map(Ok)
     }
 
     #[inline(always)]
@@ -183,7 +183,9 @@ impl CharRead for StaticStringStream {
 
     #[inline(always)]
     fn put_back_char(&mut self, c: char) {
-        self.stream.seek(SeekFrom::Current(- (c.len_utf8() as i64))).unwrap();
+        self.stream
+            .seek(SeekFrom::Current(-(c.len_utf8() as i64)))
+            .unwrap();
     }
 }
 
@@ -410,7 +412,9 @@ impl Stream {
     #[inline]
     pub fn from_owned_string(string: String, arena: &mut Arena) -> Stream {
         Stream::Byte(arena_alloc!(
-            StreamLayout::new(CharReader::new(ByteStream(Cursor::new(string.into_bytes())))),
+            StreamLayout::new(CharReader::new(ByteStream(Cursor::new(
+                string.into_bytes()
+            )))),
             arena
         ))
     }
@@ -587,10 +591,10 @@ impl CharRead for Stream {
             Stream::Readline(rl_stream) => (*rl_stream).peek_char(),
             Stream::StaticString(src) => (*src).peek_char(),
             Stream::Byte(cursor) => (*cursor).peek_char(),
-            Stream::OutputFile(_) |
-            Stream::StandardError(_) |
-            Stream::StandardOutput(_) |
-            Stream::Null(_) => Some(Err(std::io::Error::new(
+            Stream::OutputFile(_)
+            | Stream::StandardError(_)
+            | Stream::StandardOutput(_)
+            | Stream::Null(_) => Some(Err(std::io::Error::new(
                 ErrorKind::PermissionDenied,
                 StreamError::ReadFromOutputStream,
             ))),
@@ -605,10 +609,10 @@ impl CharRead for Stream {
             Stream::Readline(rl_stream) => (*rl_stream).read_char(),
             Stream::StaticString(src) => (*src).read_char(),
             Stream::Byte(cursor) => (*cursor).read_char(),
-            Stream::OutputFile(_) |
-            Stream::StandardError(_) |
-            Stream::StandardOutput(_) |
-            Stream::Null(_) => Some(Err(std::io::Error::new(
+            Stream::OutputFile(_)
+            | Stream::StandardError(_)
+            | Stream::StandardOutput(_)
+            | Stream::Null(_) => Some(Err(std::io::Error::new(
                 ErrorKind::PermissionDenied,
                 StreamError::ReadFromOutputStream,
             ))),
@@ -623,10 +627,10 @@ impl CharRead for Stream {
             Stream::Readline(rl_stream) => rl_stream.put_back_char(c),
             Stream::StaticString(src) => src.put_back_char(c),
             Stream::Byte(cursor) => cursor.put_back_char(c),
-            Stream::OutputFile(_) |
-            Stream::StandardError(_) |
-            Stream::StandardOutput(_) |
-            Stream::Null(_) => {}
+            Stream::OutputFile(_)
+            | Stream::StandardError(_)
+            | Stream::StandardOutput(_)
+            | Stream::Null(_) => {}
         }
     }
 
@@ -638,10 +642,10 @@ impl CharRead for Stream {
             Stream::Readline(ref mut rl_stream) => rl_stream.consume(nread),
             Stream::StaticString(ref mut src) => src.consume(nread),
             Stream::Byte(ref mut cursor) => cursor.consume(nread),
-            Stream::OutputFile(_) |
-            Stream::StandardError(_) |
-            Stream::StandardOutput(_) |
-            Stream::Null(_) => {}
+            Stream::OutputFile(_)
+            | Stream::StandardError(_)
+            | Stream::StandardOutput(_)
+            | Stream::Null(_) => {}
         }
     }
 }
@@ -678,10 +682,10 @@ impl Write for Stream {
             Stream::Byte(ref mut cursor) => cursor.get_mut().write(buf),
             Stream::StandardOutput(stream) => stream.write(buf),
             Stream::StandardError(stream) => stream.write(buf),
-            Stream::StaticString(_) |
-            Stream::Readline(_) |
-            Stream::InputFile(..) |
-            Stream::Null(_) => Err(std::io::Error::new(
+            Stream::StaticString(_)
+            | Stream::Readline(_)
+            | Stream::InputFile(..)
+            | Stream::Null(_) => Err(std::io::Error::new(
                 ErrorKind::PermissionDenied,
                 StreamError::WriteToInputStream,
             )),
@@ -696,10 +700,10 @@ impl Write for Stream {
             Stream::Byte(ref mut cursor) => cursor.stream.get_mut().flush(),
             Stream::StandardError(stream) => stream.stream.flush(),
             Stream::StandardOutput(stream) => stream.stream.flush(),
-            Stream::StaticString(_) |
-            Stream::Readline(_) |
-            Stream::InputFile(_) |
-            Stream::Null(_) => Err(std::io::Error::new(
+            Stream::StaticString(_)
+            | Stream::Readline(_)
+            | Stream::InputFile(_)
+            | Stream::Null(_) => Err(std::io::Error::new(
                 ErrorKind::PermissionDenied,
                 StreamError::FlushToInputStream,
             )),
@@ -711,8 +715,10 @@ impl Write for Stream {
 enum StreamError {
     PeekByteFailed,
     PeekByteFromNonPeekableStream,
-    #[allow(unused)] PeekCharFailed,
-    #[allow(unused)] PeekCharFromNonPeekableStream,
+    #[allow(unused)]
+    PeekCharFailed,
+    #[allow(unused)]
+    PeekCharFromNonPeekableStream,
     ReadFromOutputStream,
     WriteToInputStream,
     FlushToInputStream,
@@ -800,7 +806,11 @@ impl Stream {
                     ..
                 } = &mut **stream_layout;
 
-                stream.get_mut().file.seek(SeekFrom::Start(position)).unwrap();
+                stream
+                    .get_mut()
+                    .file
+                    .seek(SeekFrom::Start(position))
+                    .unwrap();
 
                 if let Ok(metadata) = stream.get_ref().file.metadata() {
                     *past_end_of_stream = position > metadata.len();
@@ -907,7 +917,9 @@ impl Stream {
             | Stream::InputFile(..) => atom!("read"),
             Stream::NamedTcp(..) | Stream::NamedTls(..) => atom!("read_append"),
             Stream::OutputFile(file) if file.is_append => atom!("append"),
-            Stream::OutputFile(_) | Stream::StandardError(_) | Stream::StandardOutput(_) => atom!("write"),
+            Stream::OutputFile(_) | Stream::StandardError(_) | Stream::StandardOutput(_) => {
+                atom!("write")
+            }
             Stream::Null(_) => atom!(""),
         }
     }
@@ -929,11 +941,7 @@ impl Stream {
     }
 
     #[inline]
-    pub(crate) fn from_tcp_stream(
-        address: Atom,
-        tcp_stream: TcpStream,
-        arena: &mut Arena,
-    ) -> Self {
+    pub(crate) fn from_tcp_stream(address: Atom, tcp_stream: TcpStream, arena: &mut Arena) -> Self {
         tcp_stream.set_read_timeout(None).unwrap();
         tcp_stream.set_write_timeout(None).unwrap();
 
@@ -991,11 +999,9 @@ impl Stream {
         let result = match self {
             Stream::NamedTcp(ref mut tcp_stream) => {
                 tcp_stream.inner_mut().tcp_stream.shutdown(Shutdown::Both)
-            },
-            Stream::NamedTls(ref mut tls_stream) => {
-                tls_stream.inner_mut().tls_stream.shutdown()
             }
-            _ => Ok(())
+            Stream::NamedTls(ref mut tls_stream) => tls_stream.inner_mut().tls_stream.shutdown(),
+            _ => Ok(()),
         };
 
         *self = Stream::Null(StreamOptions::default());
@@ -1050,7 +1056,12 @@ impl Stream {
                     return true;
                 }
                 Stream::InputFile(ref mut file_stream) => {
-                    file_stream.stream.get_mut().file.seek(SeekFrom::Start(0)).unwrap();
+                    file_stream
+                        .stream
+                        .get_mut()
+                        .file
+                        .seek(SeekFrom::Start(0))
+                        .unwrap();
                     return true;
                 }
                 Stream::Readline(_) => {
@@ -1463,9 +1474,8 @@ impl MachineState {
                         // 8.11.5.3j)
                         let stub = functor_stub(atom!("open"), 4);
 
-                        let err = self.existence_error(
-                            ExistenceError::SourceSink(self[temp_v!(1)]),
-                        );
+                        let err =
+                            self.existence_error(ExistenceError::SourceSink(self[temp_v!(1)]));
 
                         return Err(self.error_form(err, stub));
                     }

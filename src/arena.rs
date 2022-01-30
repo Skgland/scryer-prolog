@@ -20,7 +20,9 @@ macro_rules! arena_alloc {
     ($e:expr, $arena:expr) => {{
         let result = $e;
         #[allow(unused_unsafe)]
-        unsafe { $arena.alloc(result) }
+        unsafe {
+            $arena.alloc(result)
+        }
     }};
 }
 
@@ -150,7 +152,9 @@ impl<T: ?Sized> TypedArenaPtr<T> {
 
     #[inline]
     pub fn set_tag(&mut self, tag: ArenaHeaderTag) {
-        unsafe { (*self.header_ptr_mut()).set_tag(tag); }
+        unsafe {
+            (*self.header_ptr_mut()).set_tag(tag);
+        }
     }
 
     #[inline]
@@ -415,8 +419,7 @@ unsafe fn drop_slab_in_place(value: &mut AllocSlab) {
         ArenaHeaderTag::LiveLoadState | ArenaHeaderTag::InactiveLoadState => {
             ptr::drop_in_place(value.payload_offset::<LiveLoadState>());
         }
-        ArenaHeaderTag::Dropped => {
-        }
+        ArenaHeaderTag::Dropped => {}
         ArenaHeaderTag::TcpListener => {
             ptr::drop_in_place(value.payload_offset::<TcpListener>());
         }
@@ -426,8 +429,7 @@ unsafe fn drop_slab_in_place(value: &mut AllocSlab) {
         ArenaHeaderTag::StandardErrorStream => {
             ptr::drop_in_place(value.payload_offset::<StreamLayout<StandardErrorStream>>());
         }
-        ArenaHeaderTag::F64 | ArenaHeaderTag::NullStream => {
-        }
+        ArenaHeaderTag::F64 | ArenaHeaderTag::NullStream => {}
     }
 }
 
@@ -656,7 +658,11 @@ mod tests {
 
         // complete string
 
-        let pstr_var_cell = put_partial_string(&mut wam.machine_st.heap, "ronan", &mut wam.machine_st.atom_tbl);
+        let pstr_var_cell = put_partial_string(
+            &mut wam.machine_st.heap,
+            "ronan",
+            &mut wam.machine_st.atom_tbl,
+        );
         let pstr_cell = wam.machine_st.heap[pstr_var_cell.get_value() as usize];
 
         assert_eq!(pstr_cell.get_tag(), HeapCellValueTag::PStr);

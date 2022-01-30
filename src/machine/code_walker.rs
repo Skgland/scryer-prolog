@@ -7,20 +7,15 @@ fn capture_offset(line: &Instruction, index: usize, stack: &mut Vec<usize>) -> b
         &Instruction::TryMeElse(offset) if offset > 0 => {
             stack.push(index + offset);
         }
-        &Instruction::DefaultRetryMeElse(offset) |
-        &Instruction::RetryMeElse(offset)
+        &Instruction::DefaultRetryMeElse(offset) | &Instruction::RetryMeElse(offset)
             if offset > 0 =>
         {
             stack.push(index + offset);
         }
-        &Instruction::DynamicElse(_, _, NextOrFail::Next(offset))
-            if offset > 0 =>
-        {
+        &Instruction::DynamicElse(_, _, NextOrFail::Next(offset)) if offset > 0 => {
             stack.push(index + offset);
         }
-        &Instruction::DynamicInternalElse(_, _, NextOrFail::Next(offset))
-            if offset > 0 =>
-        {
+        &Instruction::DynamicInternalElse(_, _, NextOrFail::Next(offset)) if offset > 0 => {
             stack.push(index + offset);
         }
         &Instruction::JmpByCall(_, offset, _) => {
