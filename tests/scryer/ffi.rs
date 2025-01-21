@@ -11,6 +11,9 @@ use current_platform::CURRENT_PLATFORM;
 
 const TMP_DIR: &'static str = env!("CARGO_TARGET_TMPDIR");
 
+// each test is building its own library so that they can easier run in parallel,
+// i.e. don't need to wait for a large dynamic library to compile,
+// also rusts test infra currently has no functionallity for a setup/befor step
 fn build_dynamic_library(name: &str, src: &str) -> PathBuf {
     let tmp_dir: &Path = TMP_DIR.as_ref();
 
