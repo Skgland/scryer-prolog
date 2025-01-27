@@ -59,7 +59,7 @@ fn ffi_f64_nan() {
 
     load_module_test(
         "tests-pl/ffi_f64_nan.pl",
-        "   error(evaluation_error(undefined),(is)/2).\n",
+        "   error(evaluation_error(undefined),round/1).\n",
     );
 }
 
