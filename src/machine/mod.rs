@@ -61,10 +61,9 @@ use std::env;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::sync::atomic::AtomicBool;
 use std::sync::OnceLock;
 
-pub static INTERRUPT: AtomicBool = AtomicBool::new(false);
+pub mod signals;
 
 /// An instance of Scryer Prolog.
 ///

@@ -5,6 +5,8 @@ use crate::instructions::*;
 use crate::machine::arithmetic_ops::*;
 use crate::machine::machine_errors::*;
 use crate::machine::machine_state::*;
+use crate::machine::signals::MachineAction;
+use crate::machine::signals::SignalAction;
 use crate::machine::*;
 use crate::types::*;
 
@@ -287,42 +289,6 @@ impl MachineState {
                 IndexingCodePtr::Fail
             }
         )
-    }
-
-    fn check_for_interrupt(&mut self) {
-        let interrupted = INTERRUPT.load(std::sync::atomic::Ordering::Relaxed);
-
-        match INTERRUPT.compare_exchange(
-            interrupted,
-            false,
-            std::sync::atomic::Ordering::Relaxed,
-            std::sync::atomic::Ordering::Relaxed,
-        ) {
-            Ok(interruption) => {
-                if interruption {
-                    self.throw_interrupt_exception();
-                    self.backtrack();
-
-                    // We have extracted control over the Tokio runtime to the calling context for enabling library use case
-                    // (see https://github.com/mthom/scryer-prolog/pull/1880)
-                    // So we only have access to a runtime handle in here and can't shut it down.
-                    // Since I'm not aware of the consequences of deactivating this new code which came in while PR 1880
-                    // was not merged, I'm only deactivating it for now.
-
-                    //#[cfg(not(target_arch = "wasm32"))]
-                    //let runtime = tokio::runtime::Runtime::new().unwrap();
-                    //#[cfg(target_arch = "wasm32")]
-                    //let runtime = tokio::runtime::Builder::new_current_thread()
-                    //    .enable_all()
-                    //    .build()
-                    //    .unwrap();
-
-                    //let old_runtime = tokio::runtime::Handle::current();
-                    //old_runtime.shutdown_background();
-                }
-            }
-            Err(_) => unreachable!(),
-        }
     }
 
     #[inline(always)]
@@ -1607,7 +1573,7 @@ impl Machine {
                 }
             }
 
-            self.machine_st.check_for_interrupt();
+            try_or_throw!(self.machine_st, self.check_for_interrupt(), break);
         }
 
         Some(std::process::ExitCode::SUCCESS)
@@ -6041,10 +6007,64 @@ impl Machine {
                 }
             }
 
-            self.machine_st.check_for_interrupt();
+            try_or_throw!(self.machine_st, self.check_for_interrupt(), break);
         }
 
         std::process::ExitCode::SUCCESS
+    }
+
+    pub(super) fn check_for_interrupt(&mut self) -> CallResult {
+        let src: Vec<FunctorElement> = functor_stub(atom!("repl"), 0);
+
+        while let Some(pending) = signals::next_pending_signal() {
+            match pending.action {
+                SignalAction::Ignore | SignalAction::DoNothing => {
+                    // race between signal action change and signal
+                    // treat it as if Ignore/DoNothing was still/already active
+                }
+                SignalAction::Default | SignalAction::Handler(_) => {
+                    // race between signal action change and signal
+                    let err = self.machine_st.unreachable_error();
+                    return Err(self.machine_st.error_form(err, src));
+                }
+                SignalAction::Machine(machine_action) => {
+                    match machine_action {
+                        MachineAction::Terminate => {
+                            let err = self.machine_st.interrupt_error();
+                            return Err(self.machine_st.error_form(err, src));
+                        },
+                        /*
+                        MachineAction::Dump => {
+                            // FIXME output a more usefull dump, stack trace isn't really usefull as there are only few (2 as of writing) call paths that reach here
+                            let backtrace = std::backtrace::Backtrace::force_capture();
+                            println!("{backtrace}");
+                            let err = self.machine_st.interrupt_error();
+                            return Err(self.machine_st.error_form(err, src));
+                        }
+                         */
+                        MachineAction::Debug => {
+                            use std::io::IsTerminal;
+
+                            if !std::io::stdout().is_terminal() {
+                                let err = self.machine_st.interrupt_error();
+                                return Err(self.machine_st.error_form(err, src));
+                            }
+
+                            // FIXME in interactive context prompt user on what to do
+                            // otherwise print some useful information and terminate
+                            let err = self.machine_st.interrupt_error();
+                            return Err(self.machine_st.error_form(err, src));
+                        },
+                        MachineAction::RunGoal(/* goal */) => {
+                            let _signal_name = pending.signal.into_literal();
+                            todo!("call goal with argument _signal_name, ignore failure propagate thrown errors")
+                        },
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

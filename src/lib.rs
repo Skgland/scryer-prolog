@@ -55,14 +55,13 @@ pub mod wasm;
 pub fn run_binary() -> std::process::ExitCode {
     use crate::atom_table::Atom;
 
-    #[cfg(feature = "repl")]
-    use crate::machine::INTERRUPT;
-
-    #[cfg(feature = "repl")]
-    ctrlc::set_handler(move || {
-        INTERRUPT.store(true, std::sync::atomic::Ordering::Relaxed);
-    })
-    .unwrap();
+    if std::env::args_os()
+        .skip(1) // skip the binary name in arg 0
+        .take_while(|arg| arg != "--") // stop at -- arguments after that arn't to be interpreted
+        .all(|arg| arg != "--no-signals")
+    {
+        crate::machine::signals::setup_default_signal_handlers();
+    }
 
     #[cfg(target_arch = "wasm32")]
     let runtime = tokio::runtime::Builder::new_current_thread()

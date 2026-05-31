@@ -988,12 +988,4 @@ impl MachineState {
 
         self.p += 1;
     }
-
-    pub fn throw_interrupt_exception(&mut self) {
-        let err = self.interrupt_error();
-        let src = functor_stub(atom!("repl"), 0);
-        let err = self.error_form(err, src);
-
-        self.throw_exception(err);
-    }
 }

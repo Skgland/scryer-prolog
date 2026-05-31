@@ -137,6 +137,9 @@ web-sys = { version = "0.3", features = [
 js-sys = "0.3"
 ouroboros = "0.18"
 
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = "0.61"
+
 [dev-dependencies]
 current_platform = "0.2.0"
 maplit = "1.0.2"
